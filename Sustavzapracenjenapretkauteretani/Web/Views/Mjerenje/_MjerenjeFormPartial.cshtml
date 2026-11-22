@@ -1,0 +1,54 @@
+@model Sustavzapracenjenapretkauteretani.Web.Models.MjerenjeCreateViewModel
+
+<input type="hidden" asp-for="Id" />
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<section class="form-section">
+    <h2>Osnovni podaci</h2>
+    <div class="form-grid">
+
+        <partial name="_AutocompleteField" model='new AutocompleteFieldViewModel {
+            FieldName = "KorisnikId",
+            Label = "Korisnik",
+            Endpoint = "/korisnici/pretraga",
+            InitialValue = Model.KorisnikNaziv,
+            InitialId = Model.KorisnikId > 0 ? Model.KorisnikId : null
+        }' />
+
+        <partial name="_DatePickerPartial" model='new DatePickerViewModel {
+            FieldName    = "DatumMjerenja",
+            Label        = "Datum mjerenja",
+            InitialValue = Model.DatumMjerenja != default(DateTime) ? Model.DatumMjerenja.ToString("yyyy-MM-dd") : null,
+            Hint         = "Kada je obavljeno mjerenje?"
+        }' />
+
+    </div>
+</section>
+
+<section class="form-section">
+    <h2>Ključne mjere</h2>
+    <div class="form-grid">
+
+        <div class="form-field">
+            <label asp-for="Tezina"></label>
+            <input asp-for="Tezina" type="number" min="30" max="300" step="0.1" />
+            <span asp-validation-for="Tezina" class="validation-text"></span>
+            <span class="field-hint">Težina u kilogramima (30-300 kg)</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="PostotakMasti"></label>
+            <input asp-for="PostotakMasti" type="number" min="3" max="60" step="0.1" />
+            <span asp-validation-for="PostotakMasti" class="validation-text"></span>
+            <span class="field-hint">Postotak masti (3-60%) — opcionalno</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="OpsegStruka"></label>
+            <input asp-for="OpsegStruka" type="number" min="40" max="200" step="0.1" />
+            <span asp-validation-for="OpsegStruka" class="validation-text"></span>
+            <span class="field-hint">Opseg struka u cm (40-200 cm) — opcionalno</span>
+        </div>
+
+    </div>
+</section>

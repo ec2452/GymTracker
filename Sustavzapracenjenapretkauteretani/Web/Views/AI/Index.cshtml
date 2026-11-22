@@ -1,0 +1,291 @@
+@model Sustavzapracenjenapretkauteretani.Web.Models.AIUnosViewModel
+@{
+    ViewData["Title"] = "AI Unos";
+}
+
+<div class="ai-page">
+    <div class="ai-header">
+        <div>
+            <h1 class="ai-title"><i class="fas fa-robot"></i> AI Unos podataka</h1>
+            <p class="ai-subtitle">Opisite podatke prirodnim jezikom — Claude AI će ih prepoznati i pripremiti za unos.</p>
+        </div>
+    </div>
+
+    @if (Model.ApiKljucNijePostavljen)
+    {
+        <div class="ai-alert ai-alert--warn">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>API ključ nije konfiguriran.</strong>
+                Dodajte <code>AnthropicSettings:ApiKey</code> u <code>appsettings.Development.json</code>:
+                <pre class="ai-code-block">{
+  "AnthropicSettings": {
+    "ApiKey": "sk-ant-api03-..."
+  }
+}</pre>
+                API ključ dobijete na <strong>console.anthropic.com</strong>.
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.UspjesnaPoruka))
+    {
+        <div class="ai-alert ai-alert--success">
+            <i class="fas fa-check-circle"></i>
+            <span>@Model.UspjesnaPoruka</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.GreskaPoruka))
+    {
+        <div class="ai-alert ai-alert--error">
+            <i class="fas fa-times-circle"></i>
+            <span>@Model.GreskaPoruka</span>
+        </div>
+    }
+
+    <!-- INPUT SEKCIJA -->
+    <div class="ai-input-card">
+        <label class="ai-label" for="ai-textarea">Opišite što želite unijeti</label>
+        <textarea
+            id="ai-textarea"
+            class="ai-textarea"
+            placeholder="Primjeri:&#10;• Dodaj vježbu bench press, mišići prsa, razina težine 3, treba bench&#10;• Ivan Horvat je danas odradio sat kardio treninga&#10;• Mjerenje za Marku Perić: 82 kg, 18% masti&#10;• Kreiraj plan za početnike, 8 tjedana&#10;• Postavi cilj mrsavljenja za Anu Novak, 65 kg do 31.12.2025."
+            rows="5"
+            @(Model.ApiKljucNijePostavljen ? "disabled" : "")>@Model.KorisnickiUnos</textarea>
+
+        <div class="ai-input-footer">
+            <span class="ai-hint"><i class="fas fa-lightbulb"></i> Podržani entiteti: vježbe, planovi, treninzi, mjerenja, korisnici, ciljevi</span>
+            <button id="ai-btn-analiziraj" class="ai-btn ai-btn--primary" @(Model.ApiKljucNijePostavljen ? "disabled" : "")>
+                <i class="fas fa-magic"></i> Analiziraj
+            </button>
+        </div>
+    </div>
+
+    <!-- PREVIEW SEKCIJA (prikriva se dok nema rezultata) -->
+    <div id="ai-preview-section" class="ai-preview-section" hidden>
+        <div class="ai-preview-card">
+            <div class="ai-preview-header">
+                <div>
+                    <span id="ai-tip-badge" class="ai-tip-badge"></span>
+                    <h3 id="ai-potvrda-poruka" class="ai-potvrda-poruka"></h3>
+                </div>
+                <i class="fas fa-robot ai-preview-icon"></i>
+            </div>
+
+            <div id="ai-fields-grid" class="ai-fields-grid"></div>
+
+            <form id="ai-spremi-form" method="post" action="/ai-unos/spremi">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="tip" id="hidden-tip" />
+                <input type="hidden" name="podaciJson" id="hidden-podaci" />
+                <input type="hidden" name="originalInput" id="hidden-original" />
+
+                <div class="ai-preview-actions">
+                    <button type="button" id="ai-btn-otkazi" class="ai-btn ai-btn--ghost">
+                        <i class="fas fa-times"></i> Otkaži
+                    </button>
+                    <button type="submit" class="ai-btn ai-btn--success">
+                        <i class="fas fa-save"></i> Spremi u bazu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="ai-loading" class="ai-loading" hidden>
+        <div class="ai-spinner"></div>
+        <span>Claude AI analizira unos...</span>
+    </div>
+
+    <!-- GREŠKA OD AJXA -->
+    <div id="ai-ajax-error" class="ai-alert ai-alert--error" hidden>
+        <i class="fas fa-times-circle"></i>
+        <span id="ai-ajax-error-text"></span>
+    </div>
+
+    <!-- PRIMJERI -->
+    <div class="ai-examples-section">
+        <h3 class="ai-examples-title">Primjeri upita</h3>
+        <div class="ai-examples-grid">
+            <button class="ai-example-chip" data-text="Dodaj vježbu mrtvо dizanje, leđa, razina težine 4, treba šipku i tegove">
+                <i class="fas fa-dumbbell"></i> Vježba
+            </button>
+            <button class="ai-example-chip" data-text="Kreiraj trenažni plan za početnike, trajanje 8 tjedana, naziv Osnovni program snage">
+                <i class="fas fa-clipboard-list"></i> Plan
+            </button>
+            <button class="ai-example-chip" data-text="Registriraj novog korisnika: Pero Perić, pero@email.com, godište 1990, visina 180 cm, težina 82 kg">
+                <i class="fas fa-user-plus"></i> Korisnik
+            </button>
+            <button class="ai-example-chip" data-text="Ivan Horvat je jučer odradio 45 minuta kardio treninga">
+                <i class="fas fa-running"></i> Trening
+            </button>
+            <button class="ai-example-chip" data-text="Mjerenje za Ivana Horvata danas: 83.5 kg, 17.5% masti, opseg struka 88 cm">
+                <i class="fas fa-balance-scale"></i> Mjerenje
+            </button>
+            <button class="ai-example-chip" data-text="Postavi cilj mrsavljenja za Ivana Horvata — dostići 78 kg do 31.12.2025.">
+                <i class="fas fa-bullseye"></i> Cilj
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const textarea   = document.getElementById('ai-textarea');
+    const btnAnal    = document.getElementById('ai-btn-analiziraj');
+    const btnOtkazi  = document.getElementById('ai-btn-otkazi');
+    const preview    = document.getElementById('ai-preview-section');
+    const loading    = document.getElementById('ai-loading');
+    const ajaxError  = document.getElementById('ai-ajax-error');
+    const ajaxErrTxt = document.getElementById('ai-ajax-error-text');
+    const token      = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    // Primjeri — klik popunjava textarea
+    document.querySelectorAll('.ai-example-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            textarea.value = chip.dataset.text;
+            textarea.focus();
+        });
+    });
+
+    // Otkaži pregled
+    btnOtkazi?.addEventListener('click', () => {
+        preview.hidden = true;
+        ajaxError.hidden = true;
+        textarea.focus();
+    });
+
+    // Ctrl+Enter šalje formu
+    textarea.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            analiziraj();
+        }
+    });
+
+    btnAnal?.addEventListener('click', analiziraj);
+
+    async function analiziraj() {
+        const unos = textarea.value.trim();
+        if (!unos) {
+            textarea.focus();
+            return;
+        }
+
+        // Reset stanja
+        preview.hidden = true;
+        ajaxError.hidden = true;
+        loading.hidden = false;
+        btnAnal.disabled = true;
+
+        try {
+            const res = await fetch('/ai-unos/analiziraj', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    korisnickiUnos: unos,
+                    __RequestVerificationToken: token
+                })
+            });
+
+            const data = await res.json();
+
+            if (!data.uspjeh) {
+                prikaziGresku(data.poruka ?? 'Greška pri analizi.');
+                return;
+            }
+
+            prikaziPreview(data);
+
+        } catch (err) {
+            prikaziGresku('Greška mrežnog zahtjeva: ' + err.message);
+        } finally {
+            loading.hidden = true;
+            btnAnal.disabled = false;
+        }
+    }
+
+    function prikaziGresku(msg) {
+        ajaxErrTxt.textContent = msg;
+        ajaxError.hidden = false;
+    }
+
+    const TIP_LABELS = {
+        vjezba:   { label: 'Vježba',   icon: 'fa-dumbbell',      color: '#22c55e' },
+        mjerenje: { label: 'Mjerenje', icon: 'fa-balance-scale', color: '#3b82f6' },
+        trening:  { label: 'Trening',  icon: 'fa-running',       color: '#f59e0b' },
+        plan:     { label: 'Plan',     icon: 'fa-clipboard-list', color: '#8b5cf6' },
+        korisnik: { label: 'Korisnik', icon: 'fa-user-plus',     color: '#06b6d4' },
+        cilj:     { label: 'Cilj',     icon: 'fa-bullseye',      color: '#ef4444' },
+    };
+
+    const FIELD_LABELS = {
+        naziv: 'Naziv', opis: 'Opis', misicnaSkupina: 'Mišićna skupina',
+        razinaTezine: 'Razina težine', potrebnaOprema: 'Potrebna oprema',
+        korisnikIme: 'Korisnik', datum: 'Datum', tezina: 'Težina (kg)',
+        postotakMasti: 'Postotak masti (%)', opsegStruka: 'Opseg struka (cm)',
+        trajanjeMinuta: 'Trajanje (min)', vrsta: 'Vrsta treninga',
+        biljeske: 'Bilješke', potroseneKalorije: 'Kalorije', ocjena: 'Ocjena',
+        trajanjeTjedana: 'Trajanje (tjedana)', razina: 'Razina iskustva',
+        ime: 'Ime', prezime: 'Prezime', email: 'Email',
+        datumRodjenja: 'Datum rođenja', visina: 'Visina (cm)',
+        tip: 'Tip cilja', ciljanaVrijednost: 'Ciljna vrijednost', rok: 'Rok',
+    };
+
+    const VRSTA_MAP = { 1:'Snaga', 2:'Kardio', 3:'HIIT', 4:'Funkcionalni', 5:'Mobility' };
+    const RAZINA_MAP = { 1:'Početnik', 2:'Srednji', 3:'Napredni' };
+    const MISIC_MAP = { 1:'Prsa', 2:'Leđa', 3:'Ramena', 4:'Biceps', 5:'Triceps', 6:'Noge', 7:'Trbuh', 8:'Kardio', 9:'Cijelo tijelo' };
+    const TIP_CILJA_MAP = { 1:'Mrsavljenje', 2:'Dobivanje mase', 3:'Povećanje snage', 4:'Izdržljivost', 5:'Fleksibilnost' };
+
+    function formatVrijednost(key, val) {
+        if (val === null || val === undefined) return '—';
+        if (typeof val === 'boolean') return val ? 'Da' : 'Ne';
+        if (key === 'vrsta') return VRSTA_MAP[val] ?? val;
+        if (key === 'razina') return RAZINA_MAP[val] ?? val;
+        if (key === 'misicnaSkupina') return MISIC_MAP[val] ?? val;
+        if (key === 'tip') return TIP_CILJA_MAP[val] ?? val;
+        return val;
+    }
+
+    function prikaziPreview(data) {
+        const tipInfo = TIP_LABELS[data.tip] ?? { label: data.tip, icon: 'fa-question', color: '#888' };
+
+        document.getElementById('ai-tip-badge').innerHTML =
+            `<i class="fas ${tipInfo.icon}"></i> ${tipInfo.label}`;
+        document.getElementById('ai-tip-badge').style.background = tipInfo.color + '22';
+        document.getElementById('ai-tip-badge').style.color = tipInfo.color;
+
+        document.getElementById('ai-potvrda-poruka').textContent = data.potvrdaPoruka;
+
+        // Gradi polja
+        const grid = document.getElementById('ai-fields-grid');
+        grid.innerHTML = '';
+        if (data.pregled) {
+            for (const [key, val] of Object.entries(data.pregled)) {
+                if (val === null || val === undefined) continue;
+                const label = FIELD_LABELS[key] ?? key;
+                const formatted = formatVrijednost(key, val);
+                grid.innerHTML += `
+                    <div class="ai-field">
+                        <span class="ai-field__label">${label}</span>
+                        <span class="ai-field__value">${formatted}</span>
+                    </div>`;
+            }
+        }
+
+        // Popuni hidden polja forme
+        document.getElementById('hidden-tip').value = data.tip;
+        document.getElementById('hidden-podaci').value = data.podaciJson;
+        document.getElementById('hidden-original').value = data.originalInput ?? '';
+
+        preview.hidden = false;
+        preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+})();
+</script>
+}

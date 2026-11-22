@@ -1,0 +1,192 @@
+@model Cilj
+
+@{
+    ViewData["Title"] = $"Detalji cilja";
+
+    var tipLabel = Model.Tip switch {
+        TipCilja.Mrsavljenje    => "Mršavljenje",
+        TipCilja.DobivanjeMase  => "Dobivanje mase",
+        TipCilja.PovecanjeSnage => "Povećanje snage",
+        TipCilja.Izdrzljivost   => "Izdržljivost",
+        TipCilja.Fleksibilnost  => "Fleksibilnost",
+        _                       => Model.Tip.ToString()
+    };
+    var tipClass = Model.Tip switch {
+        TipCilja.Mrsavljenje    => "mrsavljenje",
+        TipCilja.DobivanjeMase  => "dobivanjemase",
+        TipCilja.PovecanjeSnage => "povecanjesnage",
+        TipCilja.Izdrzljivost   => "izdrzljivost",
+        TipCilja.Fleksibilnost  => "fleksibilnost",
+        _                       => "mrsavljenje"
+    };
+    var tipIcon = Model.Tip switch {
+        TipCilja.Mrsavljenje    => "fa-fire-alt",
+        TipCilja.DobivanjeMase  => "fa-dumbbell",
+        TipCilja.PovecanjeSnage => "fa-fist-raised",
+        TipCilja.Izdrzljivost   => "fa-heartbeat",
+        TipCilja.Fleksibilnost  => "fa-spa",
+        _                       => "fa-bullseye"
+    };
+
+    var userName   = Model.Korisnik is null ? $"Korisnik {Model.KorisnikId}" : $"{Model.Korisnik.Ime} {Model.Korisnik.Prezime}";
+    var days       = (Model.Rok - DateTime.Today).Days;
+
+    string deadlineText, deadlineColorClass;
+    if (Model.Postignut)
+    {
+        deadlineText       = "Cilj je postignut";
+        deadlineColorClass = "gsc-icon";
+    }
+    else if (days < 0)
+    {
+        deadlineText       = $"Rok je prošao prije {Math.Abs(days)} dana";
+        deadlineColorClass = "gsc-icon--red";
+    }
+    else if (days == 0)
+    {
+        deadlineText       = "Rok ističe danas!";
+        deadlineColorClass = "gsc-icon--warn";
+    }
+    else if (days <= 7)
+    {
+        deadlineText       = $"Još {days} dana";
+        deadlineColorClass = "gsc-icon--warn";
+    }
+    else
+    {
+        deadlineText       = $"Još {days} dana";
+        deadlineColorClass = "gsc-icon--blue";
+    }
+}
+
+<!-- HEADER -->
+<div class="goal-details-header">
+    <div class="goal-details-header__title">
+        <span class="tip-badge tip-badge--@tipClass">
+            <i class="fas @tipIcon"></i> @tipLabel
+        </span>
+        <h1>@tipLabel</h1>
+        <div class="goal-card-user" style="font-size: 14px;">
+            <i class="fas fa-user"></i>
+            <span>@userName</span>
+        </div>
+    </div>
+    <div class="goal-details-header__actions">
+        <a asp-route="CiljEdit" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify(Model.Tip.ToString())" class="btn-action btn-action--edit">
+            <i class="fas fa-edit"></i> Uredi
+        </a>
+        <a asp-route="CiljDelete" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify(Model.Tip.ToString())" class="btn-action btn-action--delete">
+            <i class="fas fa-trash"></i> Obriši
+        </a>
+    </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="goal-stats-grid">
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon"><i class="fas fa-bullseye"></i></div>
+        <div>
+            <div class="gsc-label">Ciljana vrijednost</div>
+            <div class="gsc-value">@Model.CiljanaVrijednost</div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon gsc-icon--blue"><i class="fas fa-calendar-alt"></i></div>
+        <div>
+            <div class="gsc-label">Rok</div>
+            <div class="gsc-value" style="font-size: 16px;">@Model.Rok.ToString("dd.MM.yyyy.")</div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon @deadlineColorClass">
+            @if (Model.Postignut)
+            {
+                <i class="fas fa-check"></i>
+            }
+            else if (days < 0)
+            {
+                <i class="fas fa-exclamation-triangle"></i>
+            }
+            else
+            {
+                <i class="fas fa-hourglass-half"></i>
+            }
+        </div>
+        <div>
+            <div class="gsc-label">Preostalo</div>
+            <div class="gsc-value" style="font-size: 15px;">@deadlineText</div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon @(Model.Postignut ? "" : "gsc-icon--warn")">
+            <i class="fas @(Model.Postignut ? "fa-check-circle" : "fa-hourglass-half")"></i>
+        </div>
+        <div>
+            <div class="gsc-label">Status</div>
+            <div class="gsc-value" style="font-size: 15px;">
+                <span class="goal-status-badge @(Model.Postignut ? "completed" : "pending")" style="font-size: 13px;">
+                    @if (Model.Postignut)
+                    {
+                        <i class="fas fa-check-circle"></i><span>Postignut</span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-hourglass-half"></i><span>U tijeku</span>
+                    }
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- DETAIL INFO SECTION -->
+<div class="section-card">
+    <div class="section-card__header">
+        <h3>Detalji cilja</h3>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0;">
+        <div class="info-item">
+            <span class="info-label">Tip cilja</span>
+            <span class="info-value">
+                <span class="tip-badge tip-badge--@tipClass">
+                    <i class="fas @tipIcon"></i> @tipLabel
+                </span>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Ciljana vrijednost</span>
+            <span class="info-value">@Model.CiljanaVrijednost</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Rok za ostvarenje</span>
+            <span class="info-value">@Model.Rok.ToString("dd. MMMM yyyy.")</span>
+        </div>
+        <div class="info-item" style="border-bottom: none;">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+                <span class="goal-status-badge @(Model.Postignut ? "completed" : "pending")">
+                    @if (Model.Postignut)
+                    {
+                        <i class="fas fa-check-circle"></i><span>Postignut</span>
+                    }
+                    else
+                    {
+                        <i class="fas fa-hourglass-half"></i><span>U tijeku</span>
+                    }
+                </span>
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- BACK BUTTON -->
+<a class="detail-back-link" asp-route="CiljeviIndex">
+    <i class="fas fa-arrow-left detail-back-link__icon" aria-hidden="true"></i>
+    Natrag na listu ciljeva
+</a>

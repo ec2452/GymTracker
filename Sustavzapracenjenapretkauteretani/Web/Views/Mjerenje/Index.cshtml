@@ -1,0 +1,244 @@
+@model MjerenjeIndexViewModel
+
+@{
+    ViewData["Title"] = "Mjerenja";
+}
+
+<!-- HEADER -->
+<div class="measurements-header">
+    <div>
+        <h1>Mjerenja</h1>
+        <p class="measurements-count">
+            @if (Model.TotalMjerenjaCount == 0)
+            {
+                <span>Nema mjerenja</span>
+            }
+            else
+            {
+                <span>Ukupno @Model.TotalMjerenjaCount mjerenja</span>
+            }
+        </p>
+    </div>
+    <a asp-route="MjerenjeCreate" class="btn-novo-mjerenje">
+        <i class="fas fa-plus"></i> Novo mjerenje
+    </a>
+</div>
+
+<!-- CONTROLS (FILTER) -->
+@if (Model.AvailableUsers.Count > 0)
+{
+    <div class="measurements-controls">
+        <label for="userId-mjerenje">Filtriraj po korisniku:</label>
+        <form method="get" style="display: flex; gap: 8px; width: 100%; flex: 1; max-width: 280px;">
+            <select id="userId-mjerenje" name="userId" onchange="applyMjerenjeFilter()">
+                <option value="">Svi korisnici (@Model.TotalMjerenjaCount)</option>
+                @foreach (var user in Model.AvailableUsers)
+                {
+                    <option value="@user.Id" selected="@(Model.SelectedUserId == user.Id)">
+                        @user.FullName (@user.MjerenjaCount)
+                    </option>
+                }
+            </select>
+        </form>
+    </div>
+}
+
+<!-- MEASUREMENTS GRID -->
+@if (Model.Mjerenja.Count > 0)
+{
+    <div class="measurements-grid">
+        @foreach (var item in Model.Mjerenja)
+        {
+            var m = item.Mjerenje!;
+            var trendClass = item.TrendDirection == "up" ? "trend-up" :
+                            item.TrendDirection == "down" ? "trend-down" : "";
+            var trendArrow = item.TrendDirection == "up" ? "↑" :
+                            item.TrendDirection == "down" ? "↓" : "→";
+            var trendArrowClass = item.TrendDirection == "up" ? "up" :
+                                 item.TrendDirection == "down" ? "down" : "neutral";
+
+            <article class="measurement-card mjerenje-kartica @trendClass">
+                <!-- HEADER: DATE + USER -->
+                <div class="card-header-meta">
+                    <div>
+                        <div class="card-date">@m.DatumMjerenja.ToString("dd. MMMM yyyy.")</div>
+                        <div class="card-user">@item.UserFullName</div>
+                    </div>
+                </div>
+
+                <!-- PRIMARY METRIC: WEIGHT -->
+                <div class="primary-metric">
+                    <div>
+                        <div class="measurement-label">Težina</div>
+                        <div class="weight-display">
+                            <div class="weight-value">
+                                <span class="animirani-broj" data-cilj="@m.Tezina.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span>
+                            </div>
+                            <div class="weight-unit">kg</div>
+                        </div>
+                    </div>
+                    @if (!item.IsFirstMeasurement && item.WeightChange.HasValue)
+                    {
+                        <div class="trend-indicator @trendArrowClass"
+                             aria-label="Trend: @(item.TrendDirection == "up" ? "povećana" : item.TrendDirection == "down" ? "smanjena" : "nije promijenjena") za @item.WeightChange.Value.ToString("0.0") kg">
+                            <span class="trend-arrow">@trendArrow</span>
+                            <span>@item.WeightChange.Value.ToString("+0.0;-0.0")kg</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- SECONDARY METRICS -->
+                <div class="secondary-metrics">
+                    <div class="measurement-metric-item">
+                        <div class="measurement-metric-label">% Masti</div>
+                        <div class="measurement-metric-value @(m.PostotakMasti == null ? "missing" : "")">
+                            @if (m.PostotakMasti.HasValue)
+                            {
+                                <span class="animirani-broj" data-cilj="@m.PostotakMasti.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="measurement-metric-item">
+                        <div class="measurement-metric-label">Opseg Struka</div>
+                        <div class="measurement-metric-value @(m.OpsegStruka == null ? "missing" : "")">
+                            @if (m.OpsegStruka.HasValue)
+                            {
+                                <span class="animirani-broj" data-cilj="@m.OpsegStruka.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span><span style="font-size: 12px; color: #64748B; margin-left: 2px;">cm</span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="card-footer-action">
+                    <a asp-route="MjerenjeDetails"
+                       asp-route-id="@m.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{item.UserFullName} {m.DatumMjerenja:yyyy-MM-dd}")"
+                       class="mjerenje-btn-detalji"
+                       aria-label="Prikaži detalje za @item.UserFullName od @m.DatumMjerenja.ToString("dd.MM.yyyy.")">
+                        Detalji <span class="action-arrow">→</span>
+                    </a>
+                    <a asp-route="MjerenjeEdit"
+                       asp-route-id="@m.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{item.UserFullName} {m.DatumMjerenja:yyyy-MM-dd}")"
+                       class="mjerenje-btn-uredi">
+                        <i class="fas fa-edit"></i> Uredi
+                    </a>
+                    <a asp-route="MjerenjeDelete"
+                       asp-route-id="@m.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{item.UserFullName} {m.DatumMjerenja:yyyy-MM-dd}")"
+                       class="mjerenje-btn-obrisi">
+                        <i class="fas fa-trash"></i> Obriši
+                    </a>
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <!-- EMPTY STATE -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <h2>Nema mjerenja</h2>
+        <p>
+            @if (Model.SelectedUserId.HasValue)
+            {
+                <span>Ovaj korisnik nema registriranih mjerenja.</span>
+            }
+            else
+            {
+                <span>Počnite dodavanjem prvog mjerenja.</span>
+            }
+        </p>
+    </div>
+}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ==========================================================
+    // A) STAGGERED CARD ENTRANCE + ANIMATED COUNTERS
+    // ==========================================================
+    function initKarticaAnimacije() {
+        var kartice = document.querySelectorAll('.mjerenje-kartica');
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    var index = Array.from(kartice).indexOf(entry.target);
+                    var column = index % 2;
+                    var row = Math.floor(index / 2);
+
+                    setTimeout(function () {
+                        entry.target.classList.add('visible');
+                        entry.target.querySelectorAll('.animirani-broj').forEach(function (el) {
+                            animirajBroj(el);
+                        });
+                    }, (row * 80) + (column * 40));
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        kartice.forEach(function (kartica) {
+            observer.observe(kartica);
+        });
+    }
+
+    // ==========================================================
+    // B) ANIMIRANI COUNTER (requestAnimationFrame, ease-out cubic)
+    // ==========================================================
+    function animirajBroj(element) {
+        var cilj = parseFloat(element.dataset.cilj);
+        var jeDecimalan = element.dataset.cilj.indexOf('.') !== -1;
+        var trajanje = 1000;
+        var pocetak = performance.now();
+
+        function korak(sada) {
+            var proteklo = sada - pocetak;
+            var napredak = Math.min(proteklo / trajanje, 1);
+            var eased = 1 - Math.pow(1 - napredak, 3);
+            var trenutni = eased * cilj;
+
+            element.textContent = jeDecimalan
+                ? trenutni.toFixed(1)
+                : Math.round(trenutni);
+
+            if (napredak < 1) requestAnimationFrame(korak);
+        }
+
+        requestAnimationFrame(korak);
+    }
+
+    initKarticaAnimacije();
+});
+
+// ==========================================================
+// C) FILTER PROMJENA — FADE OUT + NAVIGATE
+// ==========================================================
+function animirajFilterPromjenu(callback) {
+    var kartice = document.querySelectorAll('.mjerenje-kartica');
+
+    kartice.forEach(function (kartica, i) {
+        setTimeout(function () {
+            kartica.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            kartica.style.opacity = '0';
+            kartica.style.transform = 'translateY(-12px) scale(0.98)';
+        }, i * 20);
+    });
+
+    setTimeout(function () {
+        callback();
+    }, kartice.length * 20 + 200);
+}
+</script>

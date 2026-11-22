@@ -1,0 +1,645 @@
+@model Trening
+
+@{
+    ViewData["Title"] = "Detalji treninga";
+
+    var vrstaNaziv = Model.Vrsta switch
+    {
+        VrstaTreninga.Snaga => "Snaga",
+        VrstaTreninga.Kardio => "Kardio",
+        VrstaTreninga.HIIT => "HIIT",
+        VrstaTreninga.Funkcionalni => "Funkcionalni",
+        _ => "Mobility"
+    };
+
+    var vrstaClass = Model.Vrsta switch
+    {
+        VrstaTreninga.Snaga => "badge-vrsta badge-vrsta-snaga",
+        VrstaTreninga.Kardio => "badge-vrsta badge-vrsta-kardio",
+        VrstaTreninga.HIIT => "badge-vrsta badge-vrsta-hiit",
+        VrstaTreninga.Funkcionalni => "badge-vrsta badge-vrsta-funkcionalni",
+        _ => "badge-vrsta badge-vrsta-mobility"
+    };
+
+    var vrstaBoja = Model.Vrsta switch
+    {
+        VrstaTreninga.Snaga => "#10B981",
+        VrstaTreninga.Kardio => "#2563EB",
+        VrstaTreninga.HIIT => "#E11D48",
+        VrstaTreninga.Funkcionalni => "#D97706",
+        _ => "#7C3AED"
+    };
+
+    var korisnikNaziv = Model.Korisnik is null
+        ? $"Korisnik #{Model.KorisnikId}"
+        : $"{Model.Korisnik.Ime} {Model.Korisnik.Prezime}";
+
+    var ukupnoSerija = Model.TreningVjezbe.Sum(v => v.BrojSerija);
+    var ukupnoPonavljanja = Model.TreningVjezbe.Sum(v => v.BrojPonavljanja * v.BrojSerija);
+}
+
+<style>
+    .training-detail-page {
+        display: grid;
+        gap: 24px;
+    }
+
+    .training-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .training-detail-title {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--color-text-primary);
+    }
+
+    .training-detail-subtitle {
+        margin: 8px 0 0 0;
+        color: var(--color-text-tertiary);
+        font-size: 14px;
+    }
+
+    .training-hero-card,
+    .training-section-card {
+        background: var(--color-surface-800);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 12px;
+        padding: 24px;
+    }
+
+    .training-hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .badge-vrsta {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .badge-vrsta-snaga {
+        color: #bbf7d0;
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .badge-vrsta-kardio {
+        color: #bfdbfe;
+        background: rgba(37, 99, 235, 0.14);
+        border-color: rgba(37, 99, 235, 0.45);
+    }
+
+    .badge-vrsta-hiit {
+        color: #fecdd3;
+        background: rgba(225, 29, 72, 0.14);
+        border-color: rgba(225, 29, 72, 0.45);
+    }
+
+    .badge-vrsta-funkcionalni {
+        color: #fde68a;
+        background: rgba(217, 119, 6, 0.14);
+        border-color: rgba(217, 119, 6, 0.45);
+    }
+
+    .badge-vrsta-mobility {
+        color: #ddd6fe;
+        background: rgba(124, 58, 237, 0.14);
+        border-color: rgba(124, 58, 237, 0.45);
+    }
+
+    .training-date {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+    }
+
+    .training-user-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+    }
+
+    .training-note {
+        margin: 12px 0 0 0;
+        padding: 12px 16px;
+        border-left: 3px solid #14B8A6;
+        background: #14B8A608;
+        border-radius: 0 8px 8px 0;
+        color: #94A3B8;
+        font-size: 14px;
+        line-height: 1.6;
+        font-style: italic;
+    }
+
+    .training-note-empty {
+        color: var(--color-text-disabled);
+        margin-top: 12px;
+        font-size: 14px;
+    }
+
+    .training-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px;
+    }
+
+    .training-metric-box {
+        background: var(--color-surface-700);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .training-metric-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--color-text-tertiary);
+        font-weight: 600;
+    }
+
+    .training-metric-value {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--color-text-primary);
+    }
+
+    .training-metric-unit {
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+    }
+
+    .training-section-title {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .training-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 10px;
+    }
+
+    .training-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+    }
+
+    .training-table thead {
+        background: var(--color-surface-700);
+    }
+
+    .training-table th,
+    .training-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border-subtle);
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .training-table th {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--color-text-tertiary);
+        font-weight: 700;
+    }
+
+    .training-table tbody tr:hover {
+        background: rgba(16, 185, 129, 0.06);
+    }
+
+    .exercise-order {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.18);
+        color: var(--color-primary-300);
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .exercise-name {
+        color: var(--color-text-primary);
+        font-weight: 600;
+    }
+
+    /* HEADER GUMBI */
+    .header-desno {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .header-gumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 20px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .header-gumb:hover { transform: translateY(-1px); }
+    .header-gumb:active { transform: scale(0.97); }
+
+    .header-gumb-uredi {
+        background: transparent;
+        border: 1px solid #3B82F640;
+        color: #3B82F6;
+    }
+
+    .header-gumb-uredi:hover {
+        background: #3B82F615;
+        border-color: #3B82F6;
+    }
+
+    .header-gumb-obrisi {
+        background: transparent;
+        border: 1px solid #EF444440;
+        color: #EF4444;
+    }
+
+    .header-gumb-obrisi:hover {
+        background: #EF444412;
+        border-color: #EF4444;
+    }
+
+    .header-gumb-natrag {
+        background: transparent;
+        border: 1px solid #2A2D3A;
+        color: #94A3B8;
+    }
+
+    .header-gumb-natrag:hover {
+        background: #1C1F2A;
+        color: #F1F5F9;
+        border-color: #3A3D4A;
+    }
+
+    /* ENTRANCE ANIMATION */
+    .animiraj-ulaz {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        will-change: transform;
+    }
+
+    .animiraj-ulaz.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* TABLE ROW ANIMATION */
+    .tablica-red {
+        opacity: 0;
+        transform: translateX(-16px);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .tablica-red.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* METRIKA KARTICA HOVER */
+    .metrika-kartica {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        will-change: transform;
+    }
+
+    .metrika-kartica:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        border-color: #3A3D4A;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%       { transform: translateX(-5px) rotate(-0.5deg); }
+        40%       { transform: translateX(5px) rotate(0.5deg); }
+        60%       { transform: translateX(-3px); }
+        80%       { transform: translateX(3px); }
+    }
+
+    @@media (max-width: 768px) {
+        .training-detail-title {
+            font-size: 26px;
+        }
+
+        .training-hero-card,
+        .training-section-card {
+            padding: 16px;
+        }
+
+    }
+</style>
+
+<div class="training-detail-page">
+    <header class="training-detail-header">
+        <div class="header-lijevo">
+            <h1 class="training-detail-title">Detalji treninga</h1>
+            <p class="training-detail-subtitle">Pregled izvedbe treninga, metrika i svih vježbi po redoslijedu.</p>
+        </div>
+        <div class="header-desno">
+            <a asp-route="TreningEdit"
+               asp-route-id="@Model.Id"
+               asp-route-slug="@SlugHelper.Slugify($"{korisnikNaziv} {Model.DatumVrijeme:yyyy-MM-dd}")"
+               class="header-gumb header-gumb-uredi">
+                <i class="fas fa-edit"></i> Uredi
+            </a>
+            <a asp-route="TreningDelete"
+               asp-route-id="@Model.Id"
+               asp-route-slug="@SlugHelper.Slugify($"{korisnikNaziv} {Model.DatumVrijeme:yyyy-MM-dd}")"
+               class="header-gumb header-gumb-obrisi"
+               onclick="event.preventDefault(); var href=this.href; handleObrisiSAnimacijom(function(){ window.location.href=href; });">
+                <i class="fas fa-trash"></i> Obriši
+            </a>
+            <a asp-route="TreninziIndex" class="header-gumb header-gumb-natrag">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Natrag
+            </a>
+        </div>
+    </header>
+
+    <section class="training-hero-card hero-kartica animiraj-ulaz" aria-label="Osnovne informacije treninga">
+        <div class="training-hero-top">
+            <span class="@vrstaClass trening-badge" data-boja="@vrstaBoja">@vrstaNaziv</span>
+            <span class="training-date">@Model.DatumVrijeme.ToString("dd.MM.yyyy. HH:mm")</span>
+        </div>
+
+        <h2 class="training-user-name">@korisnikNaziv</h2>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Biljeske))
+        {
+            <p class="training-note">@Model.Biljeske</p>
+        }
+        else
+        {
+            <p class="training-note-empty">Nema unesenih bilješki za ovaj trening.</p>
+        }
+    </section>
+
+    <section class="training-section-card metrike-sekcija animiraj-ulaz" aria-label="Ključne metrike treninga">
+        <h2 class="training-section-title">Ključne metrike</h2>
+        <div class="training-metrics-grid">
+            <article class="training-metric-box metrika-kartica" data-tip="trajanje">
+                <span class="training-metric-label">Trajanje</span>
+                <strong class="training-metric-value"><span class="animirani-broj" data-cilj="@Model.TrajanjeMinuta">0</span></strong>
+                <span class="training-metric-unit">minuta</span>
+            </article>
+
+            <article class="training-metric-box metrika-kartica" data-tip="kalorije">
+                <span class="training-metric-label">Kalorije</span>
+                <strong class="training-metric-value">
+                    @if (Model.PotroseneKalorije.HasValue)
+                    {
+                        <span class="animirani-broj" data-cilj="@Model.PotroseneKalorije.Value">0</span>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </strong>
+                <span class="training-metric-unit">kcal</span>
+            </article>
+
+            <article class="training-metric-box metrika-kartica" data-tip="ocjena">
+                <span class="training-metric-label">Ocjena</span>
+                <strong class="training-metric-value">
+                    @if (Model.Ocjena.HasValue)
+                    {
+                        <span class="animirani-broj" data-cilj="@Model.Ocjena.Value">0</span>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </strong>
+                <span class="training-metric-unit">od 10</span>
+            </article>
+
+            <article class="training-metric-box metrika-kartica" data-tip="vjezbe">
+                <span class="training-metric-label">Vježbe</span>
+                <strong class="training-metric-value"><span class="animirani-broj" data-cilj="@Model.TreningVjezbe.Count">0</span></strong>
+                <span class="training-metric-unit">ukupno</span>
+            </article>
+
+            <article class="training-metric-box metrika-kartica" data-tip="serije">
+                <span class="training-metric-label">Ukupno serija</span>
+                <strong class="training-metric-value"><span class="animirani-broj" data-cilj="@ukupnoSerija">0</span></strong>
+                <span class="training-metric-unit">serija</span>
+            </article>
+
+            <article class="training-metric-box metrika-kartica" data-tip="ponavljanja">
+                <span class="training-metric-label">Ukupno ponavljanja</span>
+                <strong class="training-metric-value"><span class="animirani-broj" data-cilj="@ukupnoPonavljanja">0</span></strong>
+                <span class="training-metric-unit">ponavljanja</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="training-section-card vjezbe-sekcija animiraj-ulaz" aria-label="Vježbe u treningu">
+        <h2 class="training-section-title">Vježbe u treningu</h2>
+
+        @if (Model.TreningVjezbe.Any())
+        {
+            <div class="training-table-wrap">
+                <table class="training-table vjezbe-tablica">
+                    <thead>
+                        <tr>
+                            <th>Redni broj</th>
+                            <th>Vježba</th>
+                            <th>Serije</th>
+                            <th>Ponavljanja</th>
+                            <th>Težina</th>
+                            <th>Odmor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tv in Model.TreningVjezbe.OrderBy(t => t.Redoslijed))
+                        {
+                            <tr class="tablica-red">
+                                <td><span class="exercise-order">@tv.Redoslijed</span></td>
+                                <td class="exercise-name">@(tv.Vjezba?.Naziv ?? "-")</td>
+                                <td>@tv.BrojSerija</td>
+                                <td>@tv.BrojPonavljanja</td>
+                                <td>@(tv.TezinaKg?.ToString("0.#") is null ? "-" : $"{tv.TezinaKg:0.#} kg")</td>
+                                <td>@tv.OdmorSekundi s</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="training-note-empty">Za ovaj trening još nisu dodane vježbe.</p>
+        }
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ==========================================================
+    // A) PAGE ENTER — staggered reveal sekcija
+    // ==========================================================
+    document.querySelectorAll('.animiraj-ulaz').forEach(function (el, i) {
+        setTimeout(function () { el.classList.add('visible'); }, 80 + i * 130);
+    });
+
+    // ==========================================================
+    // B) ANIMIRANI COUNTERI — metrike sekcija
+    // ==========================================================
+    function animirajBroj(el) {
+        var cilj = parseFloat(el.dataset.cilj);
+        var trajanje = 1000;
+        var start = performance.now();
+
+        function frame(now) {
+            var t = Math.min((now - start) / trajanje, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = Number.isInteger(cilj)
+                ? Math.round(eased * cilj)
+                : (eased * cilj).toFixed(1);
+            if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    var metrikeEl = document.querySelector('.metrike-sekcija');
+    if (metrikeEl) {
+        var metrikeObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.animirani-broj').forEach(function (el) {
+                        animirajBroj(el);
+                    });
+                    metrikeObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        metrikeObserver.observe(metrikeEl);
+    }
+
+    // ==========================================================
+    // C) TABLICA VJEŽBI — redovi ulaze jedan po jedan
+    // ==========================================================
+    var tablica = document.querySelector('.vjezbe-tablica');
+    if (tablica) {
+        var tablicaObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.tablica-red').forEach(function (red, index) {
+                        setTimeout(function () { red.classList.add('visible'); }, index * 80);
+                    });
+                    tablicaObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        tablicaObserver.observe(tablica);
+    }
+
+    // ==========================================================
+    // D) METRIKA KARTICE — dinamički glow po tipu
+    // ==========================================================
+    var metrikaGlowBoje = {
+        'trajanje':    '#14B8A6',
+        'kalorije':    '#F97316',
+        'ocjena':      '#F59E0B',
+        'vjezbe':      '#3B82F6',
+        'serije':      '#A855F7',
+        'ponavljanja': '#22C55E'
+    };
+
+    document.querySelectorAll('.metrika-kartica').forEach(function (kartica) {
+        var tip = kartica.dataset.tip;
+        var boja = metrikaGlowBoje[tip] || '#3B82F6';
+
+        kartica.addEventListener('mouseenter', function () {
+            kartica.style.boxShadow = '0 12px 28px rgba(0,0,0,0.35), 0 0 0 1px ' + boja + '30';
+            kartica.style.borderColor = boja + '50';
+        });
+
+        kartica.addEventListener('mouseleave', function () {
+            kartica.style.boxShadow = '';
+            kartica.style.borderColor = '';
+        });
+    });
+
+    // ==========================================================
+    // E) BADGE HOVER GLOW
+    // ==========================================================
+    var heroKartica = document.querySelector('.hero-kartica');
+    var badge = document.querySelector('.trening-badge');
+    if (heroKartica && badge) {
+        var boja = badge.dataset.boja || '#10B981';
+        heroKartica.addEventListener('mouseenter', function () {
+            badge.style.boxShadow = '0 0 14px 3px ' + boja + '50';
+            badge.style.transform = 'scale(1.06)';
+        });
+        heroKartica.addEventListener('mouseleave', function () {
+            badge.style.boxShadow = 'none';
+            badge.style.transform = 'scale(1)';
+        });
+    }
+});
+
+// ==========================================================
+// E) OBRIŠI — shake + fade out stranice
+// ==========================================================
+function handleObrisiSAnimacijom(callback) {
+    var stranica = document.querySelector('.training-detail-page');
+    if (!stranica) { callback(); return; }
+
+    stranica.style.animation = 'shake 0.4s ease';
+
+    setTimeout(function () {
+        stranica.style.animation = '';
+        stranica.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        stranica.style.opacity = '0';
+        stranica.style.transform = 'scale(0.98)';
+
+        setTimeout(function () {
+            callback();
+        }, 280);
+    }, 400);
+}
+</script>

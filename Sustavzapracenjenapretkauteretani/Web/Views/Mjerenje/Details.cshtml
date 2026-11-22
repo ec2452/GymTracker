@@ -1,0 +1,902 @@
+@model MjerenjeDetailsViewModel
+
+@{
+    ViewData["Title"] = "Detalji mjerenja";
+    var userName = Model.Mjerenje.Korisnik is null
+        ? $"Mjerenje #{Model.Mjerenje.Id}"
+        : $"{Model.Mjerenje.Korisnik.Ime} {Model.Mjerenje.Korisnik.Prezime}";
+    var actionSlug = SlugHelper.Slugify(
+        $"{(Model.Mjerenje.Korisnik is null ? "Mjerenje" : $"{Model.Mjerenje.Korisnik.Ime} {Model.Mjerenje.Korisnik.Prezime}")} {Model.Mjerenje.DatumMjerenja:yyyy-MM-dd}"
+    );
+}
+
+<style>
+    /* ===== CONTAINER ===== */
+    .detalji-container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .detalji-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #2A2D3A;
+    }
+
+    .detalji-header h1 {
+        font-size: 26px;
+        font-weight: 700;
+        color: #F1F5F9;
+        margin: 0;
+    }
+
+    .header-akcije {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .detalji-btn-natrag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #2A2D3A;
+        background: transparent;
+        color: #94A3B8;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .detalji-btn-natrag:hover {
+        background: #1C1F2A;
+        color: #F1F5F9;
+        border-color: #3A3D4A;
+    }
+
+    .detalji-btn-uredi {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #3B82F630;
+        background: transparent;
+        color: #3B82F6;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .detalji-btn-uredi:hover {
+        background: #3B82F615;
+        border-color: #3B82F6;
+        color: #3B82F6;
+    }
+
+    .detalji-btn-obrisi {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #EF444430;
+        background: transparent;
+        color: #EF4444;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .detalji-btn-obrisi:hover {
+        background: #EF444410;
+        border-color: #EF4444;
+        color: #EF4444;
+    }
+
+    /* ===== INFO KARTICA ===== */
+    .info-kartica {
+        background: #1C1F2A;
+        border: 1px solid #2A2D3A;
+        border-radius: 16px;
+        padding: 24px 28px;
+    }
+
+    .info-kartica-naslov {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #F1F5F9;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #2A2D3A;
+    }
+
+    .info-kartica-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .info-kartica-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748B;
+        margin-bottom: 4px;
+    }
+
+    .info-kartica-vrijednost {
+        font-size: 15px;
+        font-weight: 600;
+        color: #F1F5F9;
+    }
+
+    /* ===== MJERENJA SEKCIJA ===== */
+    .mjerenja-sekcija {
+        background: #1C1F2A;
+        border: 1px solid #2A2D3A;
+        border-radius: 16px;
+        padding: 24px 28px;
+    }
+
+    .mjerenja-sekcija-naslov {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #F1F5F9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .mjerenja-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .mjerenje-item {
+        background: #12141A;
+        border: 1px solid #2A2D3A;
+        border-radius: 12px;
+        padding: 20px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .mjerenje-item:hover {
+        transform: translateY(-3px);
+        border-color: #3A3D4A;
+    }
+
+    .mjerenje-item-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748B;
+        margin-bottom: 8px;
+    }
+
+    .mjerenje-item-broj {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #F1F5F9;
+        line-height: 1;
+    }
+
+    .mjerenje-item--empty .mjerenje-item-broj {
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: #4B5563;
+    }
+
+    .mjerenje-item-jedinica {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 4px;
+    }
+
+    /* ===== TREND KARTICA ===== */
+    .trend-kartica {
+        background: #1C1F2A;
+        border: 1px solid #2A2D3A;
+        border-radius: 16px;
+        padding: 24px 28px;
+    }
+
+    .trend-kartica-naslov {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #F1F5F9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #2A2D3A;
+    }
+
+    .trend-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .trend-col-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748B;
+        margin-bottom: 8px;
+    }
+
+    .trend-col-broj {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #F1F5F9;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    .trend-col-datum {
+        font-size: 12px;
+        color: #64748B;
+    }
+
+    .trend-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        border-radius: 12px;
+        padding: 12px 20px;
+    }
+
+    .trend-badge--down {
+        background: #EF444415;
+        border: 1px solid #EF444430;
+        color: #EF4444;
+    }
+
+    .trend-badge--up {
+        background: #22C55E15;
+        border: 1px solid #22C55E30;
+        color: #22C55E;
+    }
+
+    .trend-badge--neutral {
+        background: #64748B15;
+        border: 1px solid #64748B30;
+        color: #94A3B8;
+    }
+
+    @@keyframes trend-pulse {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50%       { transform: translateY(-4px) scale(1.15); }
+    }
+
+    .trend-strelica {
+        font-size: 20px;
+        animation: trend-pulse 2s ease-in-out infinite;
+        display: inline-block;
+    }
+
+    .trend-badge-broj {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .trend-badge-postotak {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+
+    .trend-badge-label {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    /* ===== GODIŠNJA STATISTIKA ===== */
+    .godisnja-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .godisnja-vrijednost {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #F1F5F9;
+        margin-top: 4px;
+    }
+
+    .godisnja-jedinica {
+        font-size: 13px;
+        font-weight: 400;
+        color: #64748B;
+    }
+
+    /* ===== CILJEVI KARTICA ===== */
+    .ciljevi-kartica {
+        background: #1C1F2A;
+        border: 1px solid #2A2D3A;
+        border-radius: 16px;
+        padding: 24px 28px;
+    }
+
+    .ciljevi-kartica-naslov {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #F1F5F9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #2A2D3A;
+    }
+
+    .ciljevi-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .cilj-row {
+        padding: 16px;
+        background: #12141A;
+        border: 1px solid #2A2D3A;
+        border-radius: 12px;
+    }
+
+    .cilj-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0;
+    }
+
+    .cilj-row-tip {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748B;
+        margin-bottom: 4px;
+    }
+
+    .cilj-row-vrijednost {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #F1F5F9;
+    }
+
+    .cilj-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .cilj-badge--achieved {
+        background: #22C55E15;
+        border: 1px solid #22C55E30;
+        color: #22C55E;
+    }
+
+    .cilj-badge--overdue {
+        background: #EF444415;
+        border: 1px solid #EF444430;
+        color: #EF4444;
+    }
+
+    .cilj-badge--urgent {
+        background: #F59E0B15;
+        border: 1px solid #F59E0B30;
+        color: #F59E0B;
+    }
+
+    .cilj-badge--active {
+        background: #3B82F615;
+        border: 1px solid #3B82F630;
+        color: #3B82F6;
+    }
+
+    .cilj-detalji {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    /* ===== GRAF KARTICE ===== */
+    .graf-kartica {
+        background: #1C1F2A;
+        border: 1px solid #2A2D3A;
+        border-radius: 16px;
+        padding: 24px 28px;
+    }
+
+    .graf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #2A2D3A;
+    }
+
+    .graf-header h3 {
+        color: #F1F5F9;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .graf-header span {
+        font-size: 12px;
+        color: #64748B;
+    }
+
+    .graf-canvas-wrapper {
+        height: 260px;
+        position: relative;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @@media (max-width: 768px) {
+        .detalji-container {
+            padding: 20px 16px;
+        }
+
+        .detalji-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .header-akcije {
+            width: 100%;
+        }
+
+        .info-kartica-grid,
+        .mjerenja-grid,
+        .godisnja-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .trend-row {
+            grid-template-columns: 1fr;
+        }
+
+        .godisnja-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="detalji-container">
+
+    <!-- HEADER S GUMBIMA -->
+    <div class="detalji-header">
+        <h1>Detalji mjerenja</h1>
+        <div class="header-akcije">
+            <a asp-route="MjerenjaIndex" class="detalji-btn-natrag">
+                <i class="fas fa-arrow-left"></i> Natrag
+            </a>
+            <a asp-route="MjerenjeEdit"
+               asp-route-id="@Model.Mjerenje.Id"
+               asp-route-slug="@actionSlug"
+               class="detalji-btn-uredi">
+                <i class="fas fa-edit"></i> Uredi
+            </a>
+            <a asp-route="MjerenjeDelete"
+               asp-route-id="@Model.Mjerenje.Id"
+               asp-route-slug="@actionSlug"
+               class="detalji-btn-obrisi">
+                <i class="fas fa-trash"></i> Obriši
+            </a>
+        </div>
+    </div>
+
+    <!-- KORISNIK I DATUM -->
+    <div class="info-kartica">
+        <div class="info-kartica-naslov">
+            <i class="fas fa-user"></i>
+            <span>@userName</span>
+        </div>
+        <div class="info-kartica-grid">
+            <div>
+                <div class="info-kartica-label">Datum mjerenja</div>
+                <div class="info-kartica-vrijednost">@Model.Mjerenje.DatumMjerenja.ToString("dd. MMMM yyyy.")</div>
+            </div>
+            @if (Model.Mjerenje.Korisnik is not null)
+            {
+                <div>
+                    <div class="info-kartica-label">Korisnik</div>
+                    <div class="info-kartica-vrijednost">@Model.Mjerenje.Korisnik.Ime @Model.Mjerenje.Korisnik.Prezime</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- MJERENJA (Težina / % Masti / Opseg) -->
+    <div class="mjerenja-sekcija">
+        <div class="mjerenja-sekcija-naslov">
+            <i class="fas fa-ruler-horizontal"></i> Mjerenja
+        </div>
+        <div class="mjerenja-grid">
+            <div class="mjerenje-item">
+                <div class="mjerenje-item-label">Težina</div>
+                <div class="mjerenje-item-broj">
+                    <span class="animirani-broj" data-cilj="@Model.Mjerenje.Tezina.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span>
+                </div>
+                <div class="mjerenje-item-jedinica">kg</div>
+            </div>
+            <div class="mjerenje-item @(Model.Mjerenje.PostotakMasti == null ? "mjerenje-item--empty" : "")">
+                <div class="mjerenje-item-label">% Masti</div>
+                <div class="mjerenje-item-broj">
+                    @if (Model.Mjerenje.PostotakMasti.HasValue)
+                    {
+                        <span class="animirani-broj" data-cilj="@Model.Mjerenje.PostotakMasti.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </div>
+                @if (Model.Mjerenje.PostotakMasti.HasValue)
+                {
+                    <div class="mjerenje-item-jedinica">%</div>
+                }
+            </div>
+            <div class="mjerenje-item @(Model.Mjerenje.OpsegStruka == null ? "mjerenje-item--empty" : "")">
+                <div class="mjerenje-item-label">Opseg struka</div>
+                <div class="mjerenje-item-broj">
+                    @if (Model.Mjerenje.OpsegStruka.HasValue)
+                    {
+                        <span class="animirani-broj" data-cilj="@Model.Mjerenje.OpsegStruka.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)">0</span>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </div>
+                @if (Model.Mjerenje.OpsegStruka.HasValue)
+                {
+                    <div class="mjerenje-item-jedinica">cm</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- TREND (ako postoji prethodno mjerenje) -->
+    @if (!Model.IsFirstMeasurement && Model.PreviousMjerenje is not null)
+    {
+        var trendDir = Model.TrendDirection;
+        var trendBadgeClass = trendDir == "up" ? "trend-badge--up"
+                            : trendDir == "down" ? "trend-badge--down"
+                            : "trend-badge--neutral";
+        var trendArrow = trendDir == "up" ? "↑" : trendDir == "down" ? "↓" : "→";
+        var trendLabel = trendDir == "up" ? "POVEĆANO" : trendDir == "down" ? "SMANJENO" : "STABILNO";
+
+        <div class="trend-kartica">
+            <div class="trend-kartica-naslov">
+                <i class="fas fa-chart-line"></i> Trend od prethodnog mjerenja
+            </div>
+            <div class="trend-row">
+                <div>
+                    <div class="trend-col-label">Prethodno</div>
+                    <div class="trend-col-broj">@Model.PreviousMjerenje.Tezina.ToString("0.0")</div>
+                    <div class="trend-col-datum">@Model.PreviousMjerenje.DatumMjerenja.ToString("dd. MMM yyyy.")</div>
+                </div>
+                <div class="trend-badge @trendBadgeClass">
+                    <span class="trend-strelica">@trendArrow</span>
+                    <div class="trend-badge-broj">@Model.WeightChange?.ToString("+0.0;-0.0") kg</div>
+                    <div class="trend-badge-postotak">(@Model.PercentageChange?.ToString("+0.0;-0.0")%)</div>
+                    <div class="trend-badge-label">@trendLabel</div>
+                </div>
+                <div>
+                    <div class="trend-col-label">Trenutno</div>
+                    <div class="trend-col-broj">@Model.Mjerenje.Tezina.ToString("0.0")</div>
+                    <div class="trend-col-datum">@Model.Mjerenje.DatumMjerenja.ToString("dd. MMM yyyy.")</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- GODIŠNJA STATISTIKA -->
+    @if (Model.TotalMeasurementsThisYear > 0)
+    {
+        <div class="info-kartica">
+            <div class="info-kartica-naslov">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistika @DateTime.Now.Year.</span>
+            </div>
+            <div class="godisnja-grid">
+                <div>
+                    <div class="info-kartica-label">Ukupno mjerenja</div>
+                    <div class="godisnja-vrijednost">@Model.TotalMeasurementsThisYear</div>
+                </div>
+                <div>
+                    <div class="info-kartica-label">Najniža težina</div>
+                    <div class="godisnja-vrijednost">
+                        @Model.LowestWeight?.ToString("0.0") <span class="godisnja-jedinica">kg</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="info-kartica-label">Najveća težina</div>
+                    <div class="godisnja-vrijednost">
+                        @Model.HighestWeight?.ToString("0.0") <span class="godisnja-jedinica">kg</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="info-kartica-label">Prosječna težina</div>
+                    <div class="godisnja-vrijednost">
+                        @Model.AverageWeight?.ToString("0.0") <span class="godisnja-jedinica">kg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- GRAF TEŽINE -->
+    @if (Model.AllUserMjerenja.Count >= 2)
+    {
+        var grafJson = System.Text.Json.JsonSerializer.Serialize(
+            Model.AllUserMjerenja.Select(m => new {
+                datum = m.DatumMjerenja.ToString("yyyy-MM-dd"),
+                tezina = m.Tezina
+            })
+        );
+        <div class="graf-kartica">
+            <div class="graf-header">
+                <h3><i class="fas fa-chart-line"></i> Povijest težine</h3>
+                <span>@Model.AllUserMjerenja.Count mjerenja</span>
+            </div>
+            <div class="graf-canvas-wrapper">
+                <canvas id="grafTezine"></canvas>
+            </div>
+        </div>
+        <script>
+            window.__grafMjerenja = @Html.Raw(grafJson);
+        </script>
+    }
+
+    <!-- CILJEVI -->
+    @if (Model.RelevantGoals.Count > 0)
+    {
+        <div class="ciljevi-kartica">
+            <div class="ciljevi-kartica-naslov">
+                <i class="fas fa-bullseye"></i> Tvoji ciljevi
+            </div>
+            <div class="ciljevi-lista">
+                @foreach (var goal in Model.RelevantGoals)
+                {
+                    var daysLeft = (goal.Rok - DateTime.Now).TotalDays;
+
+                    <div class="cilj-row">
+                        <div class="cilj-row-header">
+                            <div>
+                                <div class="cilj-row-tip">
+                                    @if (goal.Tip == TipCilja.Mrsavljenje) { <span>Ciljna težina</span> }
+                                    else if (goal.Tip == TipCilja.DobivanjeMase) { <span>Ciljna masa</span> }
+                                </div>
+                                <div class="cilj-row-vrijednost">@goal.CiljanaVrijednost.ToString("0.0") kg</div>
+                            </div>
+                            <div>
+                                @if (goal.Postignut)
+                                {
+                                    <span class="cilj-badge cilj-badge--achieved"><i class="fas fa-check-circle"></i> Ostvareno</span>
+                                }
+                                else if (daysLeft < 0)
+                                {
+                                    <span class="cilj-badge cilj-badge--overdue"><i class="fas fa-exclamation-triangle"></i> Prekoračeno</span>
+                                }
+                                else if (daysLeft < 7)
+                                {
+                                    <span class="cilj-badge cilj-badge--urgent"><i class="fas fa-fire-alt"></i> Hitno</span>
+                                }
+                                else
+                                {
+                                    <span class="cilj-badge cilj-badge--active"><i class="fas fa-arrow-right"></i> Aktivno</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="cilj-detalji">
+                            <div>
+                                <div class="info-kartica-label">Rok</div>
+                                <div class="info-kartica-vrijednost">@goal.Rok.ToString("dd. MMM yyyy.")</div>
+                            </div>
+                            <div>
+                                <div class="info-kartica-label">Preostalo</div>
+                                <div class="info-kartica-vrijednost">
+                                    @if (daysLeft >= 0)
+                                    {
+                                        <span>@Math.Ceiling(daysLeft) dana</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@Math.Abs(Math.Ceiling(daysLeft)) dana kašnjenja</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ==========================================================
+    // CHART.JS — GRAF TEŽINE
+    // ==========================================================
+    var canvas = document.getElementById('grafTezine');
+    if (canvas && window.__grafMjerenja && window.__grafMjerenja.length >= 2) {
+        var mjerenja = window.__grafMjerenja;
+
+        var labeli = mjerenja.map(function (m) {
+            var d = new Date(m.datum);
+            return d.toLocaleDateString('hr-HR', { month: 'short', day: 'numeric' });
+        });
+
+        var tezine = mjerenja.map(function (m) { return m.tezina; });
+        var minT = Math.min.apply(null, tezine) - 3;
+        var maxT = Math.max.apply(null, tezine) + 3;
+
+        var ctx = canvas.getContext('2d');
+        var gradijent = ctx.createLinearGradient(0, 0, 0, 300);
+        gradijent.addColorStop(0, 'rgba(59,130,246,0.3)');
+        gradijent.addColorStop(1, 'rgba(59,130,246,0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labeli,
+                datasets: [{
+                    label: 'Težina (kg)',
+                    data: tezine,
+                    borderColor: '#3B82F6',
+                    backgroundColor: gradijent,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#1C1F2A',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#60A5FA',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeInOutQuart'
+                },
+                hover: { animationDuration: 200 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1C1F2A',
+                        borderColor: '#3B82F6',
+                        borderWidth: 1,
+                        titleColor: '#94A3B8',
+                        bodyColor: '#F1F5F9',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function (item) {
+                                return 'Težina: ' + item.raw + ' kg';
+                            },
+                            afterLabel: function (item) {
+                                var index = item.dataIndex;
+                                if (index === 0) return '';
+                                var promjena = (item.raw - item.dataset.data[index - 1]).toFixed(1);
+                                var predznak = promjena > 0 ? '+' : '';
+                                return 'Promjena: ' + predznak + promjena + ' kg';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#2A2D3A', drawBorder: false },
+                        ticks: { color: '#64748B', font: { size: 12 } },
+                        border: { display: false }
+                    },
+                    y: {
+                        min: minT,
+                        max: maxT,
+                        grid: { color: '#2A2D3A', drawBorder: false },
+                        ticks: {
+                            color: '#64748B',
+                            font: { size: 12 },
+                            callback: function (v) { return v + ' kg'; },
+                            stepSize: 2
+                        },
+                        border: { display: false }
+                    }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
+        });
+    }
+
+    // ==========================================================
+    // A) PAGE ENTER — STAGGERED REVEAL SEKCIJA
+    // ==========================================================
+    var sekcije = document.querySelectorAll(
+        '.info-kartica, .mjerenja-sekcija, .trend-kartica, .ciljevi-kartica'
+    );
+
+    sekcije.forEach(function (sekcija, index) {
+        sekcija.style.opacity = '0';
+        sekcija.style.transform = 'translateY(24px)';
+        sekcija.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+        setTimeout(function () {
+            sekcija.style.opacity = '1';
+            sekcija.style.transform = 'translateY(0)';
+        }, 100 + index * 120);
+    });
+
+    // ==========================================================
+    // B) ANIMIRANI COUNTERI (requestAnimationFrame, ease-out cubic)
+    // ==========================================================
+    function animirajBroj(el) {
+        var cilj = parseFloat(el.dataset.cilj);
+        var jeDecimal = el.dataset.cilj.indexOf('.') !== -1;
+        var trajanje = 900;
+        var start = performance.now();
+
+        function frame(now) {
+            var t = Math.min((now - start) / trajanje, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            var val = eased * cilj;
+            el.textContent = jeDecimal ? val.toFixed(1) : Math.round(val);
+            if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    setTimeout(function () {
+        document.querySelectorAll('.animirani-broj').forEach(function (el) {
+            animirajBroj(el);
+        });
+    }, 500);
+
+});
+</script>

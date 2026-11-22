@@ -1,0 +1,287 @@
+@model List<Vjezba>
+
+@{
+    ViewData["Title"] = "Vježbe";
+}
+
+<!-- HEADER -->
+<div class="vjezba-header">
+    <div class="vjezba-header-content">
+        <div class="vjezba-module-label">MODUL · <span id="exercise-count">@Model.Count</span> ZAPISA</div>
+        <h1 class="vjezba-title">Vježbe</h1>
+        <p class="vjezba-subtitle">Katalog vježbi po mišićnim skupinama i razini težine 1–5</p>
+    </div>
+    <a asp-route="VjezbaCreate" class="vjezba-btn-novo">
+        <i class="fas fa-plus"></i> Nova vježba
+    </a>
+</div>
+
+<!-- SEARCH -->
+<div class="search-bar">
+    <i class="fas fa-search search-bar__icon"></i>
+    <input type="text" id="vjezba-search-input" class="search-bar__input" placeholder="Pretraži vježbe..." />
+    <div id="vjezba-search-results" class="search-bar__results"></div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="vjezba-filter-tabs" id="filterBar">
+    <div class="vjezba-sliding-pill" id="slidingPill"></div>
+    <button class="vjezba-filter-tab active" data-filter="sve">Sve</button>
+    <button class="vjezba-filter-tab" data-filter="1">Prsa</button>
+    <button class="vjezba-filter-tab" data-filter="2">Leđa</button>
+    <button class="vjezba-filter-tab" data-filter="6">Noge</button>
+    <button class="vjezba-filter-tab" data-filter="3">Ramena</button>
+    <button class="vjezba-filter-tab" data-filter="7">Trbuh</button>
+    <button class="vjezba-filter-tab" data-filter="8">Kardio</button>
+</div>
+
+<!-- EXERCISE GRID -->
+@if (Model.Count > 0)
+{
+    <div class="vjezba-grid">
+        @foreach (var exercise in Model)
+        {
+            var muscleGroupId = (int)exercise.MisicnaSkupina;
+            var muscleGroupName = exercise.MisicnaSkupina.ToString();
+            var muscleGroupColor = GetMuscleGroupColor(exercise.MisicnaSkupina);
+            var dotColor = GetDotColor(exercise.Naziv, exercise.RazinaTezine);
+
+            <article class="vjezba-card" data-muscle-group="@muscleGroupId">
+                <!-- CARD HEADER -->
+                <div class="vjezba-card-header">
+                    <div class="vjezba-card-title-section">
+                        <span class="vjezba-dot" style="background-color: @dotColor;"></span>
+                        <div>
+                            <h3 class="vjezba-card-title">@exercise.Naziv</h3>
+                        </div>
+                    </div>
+                    <span class="vjezba-muscle-badge" style="background-color: @muscleGroupColor;">
+                        @muscleGroupName
+                    </span>
+                </div>
+
+                <!-- DESCRIPTION -->
+                <div class="vjezba-card-description @(string.IsNullOrWhiteSpace(exercise.Opis) ? "empty" : "")">
+                    @(string.IsNullOrWhiteSpace(exercise.Opis) ? "Nema dostupnog opisa" : exercise.Opis)
+                </div>
+
+                <!-- DIFFICULTY PROGRESS BAR -->
+                <div class="vjezba-difficulty-section">
+                    <div class="vjezba-difficulty-label">Razina @exercise.RazinaTezine/5</div>
+                    <div class="vjezba-progress-bar" data-razina="@exercise.RazinaTezine">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <div class="vjezba-progress-segment"></div>
+                        }
+                    </div>
+                </div>
+
+                <!-- EQUIPMENT -->
+                <div class="vjezba-equipment">
+                    <i class="fas fa-@(exercise.PotrebnaOprema ? "check-circle" : "times-circle")"></i>
+                    <span>@(exercise.PotrebnaOprema ? "Potrebna oprema" : "Bez opreme")</span>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="vjezba-card-footer">
+                    <a asp-route="VjezbaDetails" asp-route-id="@exercise.Id" asp-route-slug="@SlugHelper.Slugify(exercise.Naziv)" class="vjezba-action-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        Detalji
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(exercise.VideoUrl))
+                    {
+                        <a href="@exercise.VideoUrl" target="_blank" rel="noopener noreferrer" class="vjezba-action-btn vjezba-action-btn-video">
+                            <i class="fas fa-play"></i>
+                            Video
+                        </a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <!-- EMPTY STATE -->
+    <div class="vjezba-empty-state">
+        <div class="vjezba-empty-icon">🏋️</div>
+        <h2>Nema vježbi</h2>
+        <p>Počnite dodavanjem prve vježbe do kataloga.</p>
+    </div>
+}
+
+<!-- HELPER FUNCTIONS -->
+@functions {
+    private string GetMuscleGroupColor(MisicnaSkupina muscleGroup)
+    {
+        return muscleGroup switch
+        {
+            MisicnaSkupina.Prsa => "#F97316",
+            MisicnaSkupina.Leda => "#F97316",
+            MisicnaSkupina.Noge => "#A855F7",
+            MisicnaSkupina.Ramena => "#3B82F6",
+            MisicnaSkupina.Biceps => "#3B82F6",
+            MisicnaSkupina.Triceps => "#3B82F6",
+            MisicnaSkupina.Trbuh => "#14B8A6",
+            MisicnaSkupina.Kardio => "#3B82F6",
+            MisicnaSkupina.CijeloTijelo => "#3B82F6",
+            _ => "#64748B"
+        };
+    }
+
+    private string GetDotColor(string naziv, int razina)
+    {
+        // Boja točke zavisi od imena vježbe ili razine
+        if (naziv.Contains("Kardio") || naziv.Contains("Trčanje"))
+            return "#3B82F6";
+        if (naziv.Contains("Plank") || naziv.Contains("Sklekovi"))
+            return "#14B8A6";
+        if (naziv.Contains("Bench") || naziv.Contains("Press"))
+            return "#F97316";
+        if (razina >= 4)
+            return "#EF4444";
+        
+        return "#22C55E";
+    }
+}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    initIndexSearch('vjezba-search-input', 'vjezba-search-results', '/vjezbe/pretraga');
+
+    const filterBar = document.getElementById('filterBar');
+    const pill = document.getElementById('slidingPill');
+    const filterTabs = document.querySelectorAll('.vjezba-filter-tab');
+    const cards = document.querySelectorAll('.vjezba-card');
+
+    // ============ SLIDING PILL POSITIONING ============
+    function pomakniPill(activeTab) {
+        const tabRect = activeTab.getBoundingClientRect();
+        const barRect = filterBar.getBoundingClientRect();
+        
+        // Izračunaj poziciju relativno na bar
+        const leftOffset = tabRect.left - barRect.left - 12; // -12px je gap
+        
+        pill.style.left = `${leftOffset}px`;
+        pill.style.width = `${tabRect.width}px`;
+    }
+
+    // Inicijalno postavi pill na prvi tab
+    pomakniPill(document.querySelector('.vjezba-filter-tab.active'));
+
+    // Repozicioniraj pill pri promijeni veličine prozora
+    window.addEventListener('resize', () => {
+        const activeTab = document.querySelector('.vjezba-filter-tab.active');
+        if (activeTab) pomakniPill(activeTab);
+    });
+
+    // ============ CARD EXIT ANIMATION ============
+    function animirajIzlazKartica(callback) {
+        cards.forEach(kartica => {
+            kartica.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+            kartica.style.opacity = '0';
+            kartica.style.transform = 'translateY(-8px)';
+        });
+        
+        // Nakon što izađu, pozovi callback
+        setTimeout(callback, 150);
+    }
+
+    // ============ CARD ENTRANCE ANIMATION WITH STAGGER ============
+    function animirajUlazKartica() {
+        const vidljive = Array.from(cards).filter(card => card.style.display !== 'none');
+        
+        vidljive.forEach((kartica, index) => {
+            // Postavi početno stanje
+            kartica.style.transition = 'none';
+            kartica.style.opacity = '0';
+            kartica.style.transform = 'translateY(8px)';
+            
+            // Ulaz s razmakom po indexu (stagger)
+            setTimeout(() => {
+                kartica.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                kartica.style.opacity = '1';
+                kartica.style.transform = 'translateY(0)';
+            }, index * 60); // svaka kartica 60ms kasnije
+        });
+    }
+
+    // ============ FILTERING WITH ANIMATIONS ============
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+            const filter = this.getAttribute('data-filter');
+            
+            // 1. Pomakni pill
+            pomakniPill(this);
+            
+            // 2. Update active tab
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 3. Animiraj izlaz kartica
+            animirajIzlazKartica(() => {
+                // 4. Filtriraj kartice
+                cards.forEach(card => {
+                    if (filter === 'sve') {
+                        card.style.display = 'flex';
+                    } else {
+                        const muscleGroup = card.getAttribute('data-muscle-group');
+                        card.style.display = muscleGroup === filter ? 'flex' : 'none';
+                    }
+                });
+                
+                // 5. Animiraj ulaz kartica
+                animirajUlazKartica();
+                
+                // 6. Reinicijalizuj progress animacije nakon što se kartice prikažu
+                setTimeout(initProgressAnimations, 250);
+            });
+        });
+    });
+
+    // ============ PROGRESS BAR ANIMATIONS ============
+    function initProgressAnimations() {
+        const progressBars = document.querySelectorAll('.vjezba-progress-bar');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bar = entry.target;
+                    const razina = parseInt(bar.dataset.razina);
+                    const segmenti = bar.querySelectorAll('.vjezba-progress-segment');
+                    
+                    // Animiraj svaki segment jedan po jedan
+                    segmenti.forEach((segment, index) => {
+                        setTimeout(() => {
+                            if (index < razina) {
+                                // Aktivni segment — zeleni
+                                segment.style.backgroundColor = '#22C55E';
+                                segment.style.opacity = '1';
+                                segment.style.transform = 'scale(1.0)';
+                            } else {
+                                // Neaktivni segment — sivi ali vidljiv
+                                segment.style.backgroundColor = '#374151';
+                                segment.style.opacity = '0.5';
+                                segment.style.transform = 'scale(1.0)';
+                            }
+                        }, index * 120); // 120ms razmak između svakog segmenta
+                    });
+                    
+                    // Ne ponavljaj animaciju
+                    observer.unobserve(bar);
+                }
+            });
+        }, { 
+            threshold: 0.3 // kartica mora biti 30% vidljiva
+        });
+        
+        progressBars.forEach(bar => observer.observe(bar));
+        
+        return observer;
+    }
+    
+    // Initialize on page load
+    initProgressAnimations();
+});
+</script>

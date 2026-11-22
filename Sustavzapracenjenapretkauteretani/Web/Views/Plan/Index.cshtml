@@ -1,0 +1,116 @@
+@model List<Plan>
+
+@{
+    ViewData["Title"] = "Planovi";
+}
+
+<!-- HEADER -->
+<div class="plan-header">
+    <div>
+        <h1>Planovi</h1>
+        <p class="plan-count">
+            @if (Model.Count == 0)
+            {
+                <span>Nema dostupnih planova</span>
+            }
+            else
+            {
+                <span>Ukupno @Model.Count @(Model.Count == 1 ? "plan" : "planova")</span>
+            }
+        </p>
+    </div>
+    <a asp-route="PlanCreate" class="btn-action btn-action--primary">
+        <i class="fas fa-plus"></i> Novi plan
+    </a>
+</div>
+
+<!-- SEARCH -->
+<div class="search-bar">
+    <i class="fas fa-search search-bar__icon"></i>
+    <input type="text" id="plan-search-input" class="search-bar__input" placeholder="Pretraži planove..." />
+    <div id="plan-search-results" class="search-bar__results"></div>
+</div>
+
+<!-- PLAN GRID -->
+@if (Model.Count > 0)
+{
+    <div class="plan-grid">
+        @foreach (var plan in Model)
+        {
+            var levelLabel = plan.Razina switch {
+                RazinaIskustva.Pocetnik => "Početnik",
+                RazinaIskustva.Srednji  => "Srednji",
+                RazinaIskustva.Napredni => "Napredni",
+                _                       => plan.Razina.ToString()
+            };
+            var levelClass = plan.Razina switch {
+                RazinaIskustva.Pocetnik => "pocetnik",
+                RazinaIskustva.Srednji  => "srednji",
+                RazinaIskustva.Napredni => "napredni",
+                _                       => "pocetnik"
+            };
+            var vjezbeLabel = plan.Vjezbe.Count switch {
+                1 => "vježba",
+                2 or 3 or 4 => "vježbe",
+                _ => "vježbi"
+            };
+
+            <article class="plan-card plan-card--@levelClass">
+                <!-- TOP ROW: level badge + date -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+                    <span class="level-badge level-badge--@levelClass">@levelLabel</span>
+                    <span style="font-size: 11px; color: var(--color-text-disabled);">@plan.DatumKreiranja.ToString("dd.MM.yyyy.")</span>
+                </div>
+
+                <!-- TITLE -->
+                <h3>@plan.Naziv</h3>
+
+                <!-- DESCRIPTION -->
+                <div class="plan-description @(string.IsNullOrWhiteSpace(plan.Opis) ? "empty" : "")">
+                    @(string.IsNullOrWhiteSpace(plan.Opis) ? "Nema dostupnog opisa" : plan.Opis)
+                </div>
+
+                <!-- CHIPS: duration + exercise count -->
+                <div class="plan-chips">
+                    <span class="plan-chip">
+                        <i class="fas fa-clock"></i>
+                        @plan.TrajanjeTjedana @(plan.TrajanjeTjedana == 1 ? "tjedan" : "tjedni")
+                    </span>
+                    <span class="plan-chip">
+                        <i class="fas fa-dumbbell"></i>
+                        @plan.Vjezbe.Count @vjezbeLabel
+                    </span>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="plan-footer">
+                    <a asp-route="PlanDetails" asp-route-id="@plan.Id" asp-route-slug="@SlugHelper.Slugify(plan.Naziv)" class="plan-button">
+                        <i class="fas fa-arrow-right plan-button-icon"></i>
+                        Detalji
+                    </a>
+                    <a asp-route="PlanEdit" asp-route-id="@plan.Id" asp-route-slug="@SlugHelper.Slugify(plan.Naziv)" class="btn-action btn-action--edit" style="font-size: 13px; min-height: 36px; padding: 6px 12px;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a asp-route="PlanDelete" asp-route-id="@plan.Id" asp-route-slug="@SlugHelper.Slugify(plan.Naziv)" class="btn-action btn-action--delete" style="font-size: 13px; min-height: 36px; padding: 6px 12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <!-- EMPTY STATE -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h2>Nema planova</h2>
+        <p>Počnite dodavanjem prvog plana do kataloga.</p>
+    </div>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initIndexSearch('plan-search-input', 'plan-search-results', '/planovi/pretraga');
+    });
+</script>

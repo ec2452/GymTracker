@@ -1,0 +1,57 @@
+@{
+    var moduleName = ViewContext.RouteData.Values["Controller"]?.ToString() switch
+    {
+        "Vjezba" => "Vježbe",
+        "Plan" => "Planovi",
+        "Cilj" => "Ciljevi",
+        "Korisnik" => "Korisnici",
+        "Mjerenje" => "Mjerenja",
+        "Trening" => "Treninzi",
+        "TreningVjezba" => "Vježbe u treningu",
+        _ => "Modul"
+    };
+
+    var moduleIcon = ViewContext.RouteData.Values["Controller"]?.ToString() switch
+    {
+        "Vjezba" => "fa-running",
+        "Plan" => "fa-clipboard-list",
+        "Cilj" => "fa-bullseye",
+        "Korisnik" => "fa-users",
+        "Mjerenje" => "fa-balance-scale",
+        "Trening" => "fa-dumbbell",
+        "TreningVjezba" => "fa-book",
+        _ => "fa-folder"
+    };
+
+    var moduleIndexRoute = ViewContext.RouteData.Values["Controller"]?.ToString() switch
+    {
+        "Vjezba" => "VjezbeIndex",
+        "Plan" => "PlanoviIndex",
+        "Cilj" => "CiljeviIndex",
+        "Korisnik" => "KorisniciIndex",
+        "Mjerenje" => "MjerenjaIndex",
+        "Trening" => "TreninziIndex",
+        "TreningVjezba" => "TreningVjezbeIndex",
+        _ => "HomeRoot"
+    };
+
+    var itemName = ViewData["ItemName"]?.ToString() ?? "Detalji";
+}
+
+<nav class="breadcrumb-nav" aria-label="Putanja stranice">
+    <a asp-route="HomeRoot" class="breadcrumb-link" title="Početna stranica">
+        <i class="fas fa-home"></i>
+        <span>Početna</span>
+    </a>
+    <span class="breadcrumb-sep">/</span>
+    <a asp-route="@moduleIndexRoute" 
+       class="breadcrumb-link"
+       title="Povratak na listu @moduleName.ToLower()">
+        <i class="fas @moduleIcon"></i>
+        <span>@moduleName</span>
+    </a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current" aria-current="page">
+        @itemName
+    </span>
+</nav>

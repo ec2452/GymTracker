@@ -1,0 +1,390 @@
+/* ===== REFACTORED VJEZBA (EXERCISE) PAGE ===== */
+
+/* HEADER */
+.vjezba-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.vjezba-header-content {
+    flex: 1;
+    min-width: 300px;
+}
+
+.vjezba-module-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #94A3B8;
+    margin-bottom: 8px;
+}
+
+.vjezba-title {
+    font-size: 40px;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    color: #F1F5F9;
+    letter-spacing: -0.5px;
+}
+
+.vjezba-subtitle {
+    font-size: 16px;
+    color: #94A3B8;
+    margin: 0;
+    font-weight: 400;
+}
+
+.vjezba-btn-novo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: #00C896;
+    color: #0F1117;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.vjezba-btn-novo:hover {
+    background: #00B583;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 200, 150, 0.2);
+}
+
+.vjezba-btn-novo:active {
+    transform: translateY(0);
+}
+
+/* FILTER TABS */
+.vjezba-filter-tabs {
+    position: relative;        /* pill se pozicionira relativno na ovo */
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    padding: 12px;
+    background: #1C1F2A;
+    border-radius: 12px;
+    border: 1px solid #2A2D3A;
+}
+
+.vjezba-sliding-pill {
+    position: absolute;        /* ključno — pill lebdi ispod tabova */
+    top: 12px;
+    left: 0;                   /* JS će ovo mijenjati */
+    height: calc(100% - 24px);
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* cubic-bezier = Google Material easing, prirodniji od ease */
+    z-index: 0;
+    pointer-events: none;      /* pill ne blokira klikove na tabove */
+}
+
+.vjezba-filter-tab {
+    position: relative;
+    z-index: 1;                /* tabovi iznad pilla */
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: transparent;
+    color: #94A3B8;
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+
+.vjezba-filter-tab:hover {
+    color: #F1F5F9;
+}
+
+.vjezba-filter-tab.active {
+    color: #0F1117;            /* tamni tekst na bijelom pillu */
+    font-weight: 700;
+}
+
+/* GRID */
+.vjezba-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+    .vjezba-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+/* CARD */
+.vjezba-card {
+    background: #1C1F2A;
+    border: 1px solid #2A2D3A;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: all 0.2s ease;
+    color: #F1F5F9;
+    text-decoration: none;
+}
+
+.vjezba-card:hover {
+    border-color: #3A3D4A;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px);
+}
+
+/* CARD HEADER */
+.vjezba-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.vjezba-card-title-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+}
+
+.vjezba-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.vjezba-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: #F1F5F9;
+    word-break: break-word;
+}
+
+.vjezba-muscle-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* DESCRIPTION */
+.vjezba-card-description {
+    font-size: 14px;
+    color: #94A3B8;
+    line-height: 1.5;
+    min-height: 42px;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.vjezba-card-description.empty {
+    color: #64748B;
+    font-style: italic;
+}
+
+/* DIFFICULTY SECTION */
+.vjezba-difficulty-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid #2A2D3A;
+    border-bottom: 1px solid #2A2D3A;
+}
+
+.vjezba-difficulty-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94A3B8;
+    min-width: 60px;
+}
+
+.vjezba-progress-bar {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    align-items: center;
+}
+
+.vjezba-progress-segment {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #374151;
+    opacity: 0.4;
+    transform: scale(0.6);
+    transition: background-color 0.3s ease, 
+                opacity 0.3s ease, 
+                transform 0.3s ease;
+    will-change: transform, opacity, background-color;
+}
+
+.vjezba-progress-segment.filled {
+    background: #22C55E;
+}
+
+/* EQUIPMENT */
+.vjezba-equipment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #94A3B8;
+}
+
+.vjezba-equipment i {
+    font-size: 14px;
+}
+
+/* CARD FOOTER */
+.vjezba-card-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.vjezba-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #2A2D3A;
+    color: #F1F5F9;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #3A3D4A;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.vjezba-action-btn:hover {
+    background: #00C896;
+    border-color: #00C896;
+    color: #0F1117;
+    transform: translateY(-2px);
+}
+
+.vjezba-action-btn:focus {
+    outline: 2px solid #00C896;
+    outline-offset: 2px;
+}
+
+.vjezba-action-btn-video {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: #3B82F6;
+    color: #3B82F6;
+}
+
+.vjezba-action-btn-video:hover {
+    background: #3B82F6;
+    border-color: #3B82F6;
+    color: white;
+}
+
+/* EMPTY STATE */
+.vjezba-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.vjezba-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+.vjezba-empty-state h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #F1F5F9;
+    margin: 0 0 8px 0;
+}
+
+.vjezba-empty-state p {
+    font-size: 16px;
+    color: #94A3B8;
+    margin: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+    .vjezba-header {
+        flex-direction: column;
+    }
+
+    .vjezba-title {
+        font-size: 28px;
+    }
+
+    .vjezba-btn-novo {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .vjezba-card-header {
+        flex-direction: column;
+    }
+
+    .vjezba-muscle-badge {
+        width: 100%;
+        text-align: center;
+    }
+
+    .vjezba-action-btn {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    /* Tabs scroll horizontally so the sliding pill stays accurate */
+    .vjezba-filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+    }
+
+    .vjezba-filter-tabs::-webkit-scrollbar {
+        display: none;
+    }
+}

@@ -1,0 +1,43 @@
+@model Sustavzapracenjenapretkauteretani.Web.Models.PlanCreateViewModel
+
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<section class="form-section">
+    <h2>Osnovni podaci</h2>
+    <div class="form-grid">
+
+        <div class="form-field form-field-full">
+            <label asp-for="Naziv"></label>
+            <input asp-for="Naziv" placeholder="npr. Početni plan, Snaga i masa..." />
+            <span asp-validation-for="Naziv" class="validation-text"></span>
+        </div>
+
+        <div class="form-field form-field-full">
+            <label asp-for="Opis"></label>
+            <textarea asp-for="Opis" rows="4" style="background: var(--color-base-800); border: 1px solid var(--color-border-default); color: var(--color-text-primary); border-radius: 8px; padding: 10px 12px; font-size: 14px; resize: vertical;" placeholder="Opišite svrhu i cilj plana..."></textarea>
+            <span asp-validation-for="Opis" class="validation-text"></span>
+            <span class="field-hint">Opcionalno — detaljniji opis plana za korisnike</span>
+        </div>
+
+    </div>
+</section>
+
+<section class="form-section">
+    <h2>Karakteristike plana</h2>
+    <div class="form-grid">
+
+        <div class="form-field">
+            <label asp-for="TrajanjeTjedana"></label>
+            <input asp-for="TrajanjeTjedana" type="number" min="1" max="52" />
+            <span asp-validation-for="TrajanjeTjedana" class="validation-text"></span>
+            <span class="field-hint">Koliko tjedana trajanja ima ovaj plan?</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Razina"></label>
+            <select asp-for="Razina" asp-items="Html.GetEnumSelectList<RazinaIskustva>()"></select>
+            <span asp-validation-for="Razina" class="validation-text"></span>
+        </div>
+
+    </div>
+</section>

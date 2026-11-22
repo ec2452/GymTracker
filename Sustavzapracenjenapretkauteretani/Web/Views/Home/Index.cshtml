@@ -1,0 +1,230 @@
+@model HomeDashboardViewModel
+
+@{
+    ViewData["Title"] = "Početna";
+}
+
+<div class="home-page">
+
+    <section class="home-hero-v2">
+        <div class="home-hero-v2__content">
+            <div class="home-live-badge">
+                <span class="home-live-dot"></span>
+                LIVE &middot; @Model.KorisniciCount AKTIVNIH SADA
+            </div>
+
+            <h1 class="home-title-v2">Treniraj <span class="home-title-v2__accent">pametnije</span>, ne više.</h1>
+            <p class="home-lead-v2">
+                GymTracker spaja treninge, mjerenja i ciljeve u jedan jasan pregled. Pratite svaki rep, svaki kilogram i svaki cilj — bez tabela, bez kaosa.
+            </p>
+
+            <div class="home-hero-v2__actions">
+                <a asp-route="TreninziIndex" class="home-button home-button--primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>Započni trening</span>
+                </a>
+                <a asp-route="MjerenjaIndex" class="home-button home-button--secondary">
+                    <span>Pogledaj napredak</span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <p class="home-hero-v2__meta">@Model.KorisniciCount člana &middot; @Model.TreninziCount treninga</p>
+        </div>
+
+        <aside class="home-hero-v2__panel" aria-label="Pregled sustava">
+            <div class="home-panel-v2__header">
+                <span class="home-panel-v2__title">PREGLED SUSTAVA</span>
+                <span class="home-panel-v2__live">
+                    <span class="home-live-dot"></span> Live
+                </span>
+            </div>
+
+            <div class="home-overview-grid">
+                <div class="home-overview-stat">
+                    <span class="home-overview-stat__label">KORISNICI</span>
+                    <strong class="home-overview-stat__value">@Model.KorisniciCount</strong>
+                    <span class="home-overview-stat__note">registriranih</span>
+                </div>
+                <div class="home-overview-stat">
+                    <span class="home-overview-stat__label">TRENINZI</span>
+                    <strong class="home-overview-stat__value">@Model.TreninziCount</strong>
+                    <span class="home-overview-stat__note">sesija ukupno</span>
+                </div>
+                <div class="home-overview-stat">
+                    <span class="home-overview-stat__label">PLANOVI</span>
+                    <strong class="home-overview-stat__value">@Model.PlanoviCount</strong>
+                    <span class="home-overview-stat__note">aktivnih</span>
+                </div>
+                <div class="home-overview-stat">
+                    <span class="home-overview-stat__label">CILJEVI</span>
+                    <strong class="home-overview-stat__value">@Model.CiljeviCount</strong>
+                    <span class="home-overview-stat__note">postavljeno</span>
+                </div>
+            </div>
+
+            <div class="home-panel-v2__divider"></div>
+
+            <div class="home-panel-v2__row">
+                <div class="home-panel-v2__mini-stat">
+                    <span class="home-overview-stat__label">MJERENJA</span>
+                    <strong class="home-overview-stat__value home-overview-stat__value--sm">@Model.MjerenjaCount</strong>
+                </div>
+                <div class="home-panel-v2__mini-stat">
+                    <span class="home-overview-stat__label">VJEŽBE</span>
+                    <strong class="home-overview-stat__value home-overview-stat__value--sm">@Model.VjezbeCount</strong>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <div class="home-ticker" aria-label="Aktivnost">
+        <span class="home-ticker__label">AKTIVNOST</span>
+        <div class="home-ticker__track">
+            <span class="home-ticker__item">
+                <i class="fas fa-dumbbell" aria-hidden="true"></i>
+                <b>Novi trening</b> dodan
+                <span class="home-ticker__time">upravo</span>
+            </span>
+            <span class="home-ticker__sep">&middot;</span>
+            <span class="home-ticker__item">
+                <i class="fas fa-weight-scale" aria-hidden="true"></i>
+                <b>Mjerenje</b> zabilježeno
+                <span class="home-ticker__time">prije 5 min</span>
+            </span>
+            <span class="home-ticker__sep">&middot;</span>
+            <span class="home-ticker__item">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <b>Novi korisnik</b> dodan
+                <span class="home-ticker__time">prije 12 min</span>
+            </span>
+            <span class="home-ticker__sep">&middot;</span>
+            <span class="home-ticker__item">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                <b>Cilj</b> ažuriran
+                <span class="home-ticker__time">prije 38 min</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="home-stats-bar">
+        <div class="home-stat-block">
+            <i class="fas fa-users home-stat-block__icon" aria-hidden="true"></i>
+            <strong class="home-stat-block__value">@Model.KorisniciCount</strong>
+            <span class="home-stat-block__label">KORISNICI</span>
+            <span class="home-stat-block__note">↑ 12 ovaj mjesec</span>
+        </div>
+        <div class="home-stat-block">
+            <i class="fas fa-dumbbell home-stat-block__icon" aria-hidden="true"></i>
+            <strong class="home-stat-block__value">@Model.TreninziCount</strong>
+            <span class="home-stat-block__label">TRENINZI</span>
+            <span class="home-stat-block__note">↑ 64 ovaj tjedan</span>
+        </div>
+        <div class="home-stat-block">
+            <i class="fas fa-clipboard-list home-stat-block__icon" aria-hidden="true"></i>
+            <strong class="home-stat-block__value">@Model.PlanoviCount</strong>
+            <span class="home-stat-block__label">PLANOVI</span>
+            <span class="home-stat-block__note">↑ 2 nova</span>
+        </div>
+        <div class="home-stat-block">
+            <i class="fas fa-bullseye home-stat-block__icon" aria-hidden="true"></i>
+            <strong class="home-stat-block__value">@Model.CiljeviCount</strong>
+            <span class="home-stat-block__label">CILJEVI</span>
+            <span class="home-stat-block__note">postavljeno</span>
+        </div>
+    </div>
+
+    <section class="home-section">
+        <div class="home-section__heading">
+            <h2>Moduli</h2>
+            <span class="home-section__meta">6 / 6</span>
+        </div>
+
+        <div class="home-bento-grid">
+            <a asp-route="TreninziIndex" class="home-bento-card home-bento-card--large" aria-label="Otvori modul Treninzi">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-dumbbell" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.TreninziCount zapisa</span>
+                </div>
+                <h3 class="home-bento-card__title">Treninzi</h3>
+                <p class="home-bento-card__desc">Pregled svih treninga, intenziteta i ocjena kroz vrijeme — filtrirano po korisniku ili razdoblju.</p>
+                <div class="home-bento-card__stats">
+                    <div class="home-bento-card__stat">
+                        <strong>@Model.TreninziCount</strong>
+                        <span>UKUPNO</span>
+                    </div>
+                </div>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status"><span class="home-live-dot"></span> Sinkronizirano</span>
+                    <span class="home-bento-card__link">Otvori modul <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+
+            <a asp-route="PlanoviIndex" class="home-bento-card" aria-label="Otvori modul Planovi">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.PlanoviCount</span>
+                </div>
+                <h3 class="home-bento-card__title">Planovi</h3>
+                <p class="home-bento-card__desc">Programi po razini i trajanju.</p>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status">Aktivnih: @Model.PlanoviCount</span>
+                    <span class="home-bento-card__link">Otvori <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+
+            <a asp-route="CiljeviIndex" class="home-bento-card" aria-label="Otvori modul Ciljevi">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-bullseye" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.CiljeviCount</span>
+                </div>
+                <h3 class="home-bento-card__title">Ciljevi</h3>
+                <p class="home-bento-card__desc">Postavljanje i praćenje napretka.</p>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status">@Model.CiljeviCount postignuto</span>
+                    <span class="home-bento-card__link">Otvori <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+
+            <a asp-route="MjerenjaIndex" class="home-bento-card" aria-label="Otvori modul Mjerenja">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-weight-scale" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.MjerenjaCount</span>
+                </div>
+                <h3 class="home-bento-card__title">Mjerenja</h3>
+                <p class="home-bento-card__desc">Tjelesne mjere s trendovima.</p>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status">Zadnje · danas</span>
+                    <span class="home-bento-card__link">Otvori <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+
+            <a asp-route="KorisniciIndex" class="home-bento-card" aria-label="Otvori modul Korisnici">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.KorisniciCount</span>
+                </div>
+                <h3 class="home-bento-card__title">Korisnici</h3>
+                <p class="home-bento-card__desc">Profili članova i njihovi planovi.</p>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status">↑ 12 ovaj mjesec</span>
+                    <span class="home-bento-card__link">Otvori <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+
+            <a asp-route="VjezbeIndex" class="home-bento-card" aria-label="Otvori modul Vježbe">
+                <div class="home-bento-card__top">
+                    <span class="home-bento-card__icon"><i class="fas fa-book-open" aria-hidden="true"></i></span>
+                    <span class="home-bento-card__count">@Model.VjezbeCount</span>
+                </div>
+                <h3 class="home-bento-card__title">Vježbe</h3>
+                <p class="home-bento-card__desc">Katalog vježbi i tehnika.</p>
+                <div class="home-bento-card__footer">
+                    <span class="home-bento-card__status">@Model.VjezbeCount vježbi</span>
+                    <span class="home-bento-card__link">Otvori <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+</div>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GymTracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/vjezba-refactor.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Sustavzapracenjenapretkauteretani.styles.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+
+        <!-- DESKTOP SIDEBAR -->
+        <aside class="app-sidebar app-sidebar-desktop">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand__name">GymTracker</span>
+                <span class="sidebar-brand__sub">tvoj napredak</span>
+            </div>
+
+            <!-- GLOBAL SEARCH TRIGGER -->
+            <button class="gs-trigger" id="gs-trigger" title="Globalna pretraga (Ctrl+K)">
+                <i class="fas fa-search"></i>
+                <span>Pretraži</span>
+                <kbd>Ctrl K</kbd>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <span class="sidebar-section__label">GLAVNO</span>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-route="HomeRoot">
+                        <i class="fas fa-home"></i>
+                        <span>Početna</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <span class="sidebar-section__label">MODULI</span>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Trening" ? "active" : "")" asp-route="TreninziIndex">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Treninzi</span>
+                        @if (ViewData["TreninziCount"] != null) { <span class="nav-badge">@ViewData["TreninziCount"]</span> }
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Vjezba" ? "active" : "")" asp-route="VjezbeIndex">
+                        <i class="fas fa-running"></i>
+                        <span>Vježbe</span>
+                        @if (ViewData["VjezbeCount"] != null) { <span class="nav-badge">@ViewData["VjezbeCount"]</span> }
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Plan" ? "active" : "")" asp-route="PlanoviIndex">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Planovi</span>
+                        @if (ViewData["PlanoviCount"] != null) { <span class="nav-badge">@ViewData["PlanoviCount"]</span> }
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Cilj" ? "active" : "")" asp-route="CiljeviIndex">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Ciljevi</span>
+                        @if (ViewData["CiljeviCount"] != null) { <span class="nav-badge">@ViewData["CiljeviCount"]</span> }
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Mjerenje" ? "active" : "")" asp-route="MjerenjaIndex">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Mjerenja</span>
+                        @if (ViewData["MjerenjaCount"] != null) { <span class="nav-badge">@ViewData["MjerenjaCount"]</span> }
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Korisnik" ? "active" : "")" asp-route="KorisniciIndex">
+                        <i class="fas fa-users"></i>
+                        <span>Korisnici</span>
+                        @if (ViewData["KorisniciCount"] != null) { <span class="nav-badge">@ViewData["KorisniciCount"]</span> }
+                    </a>
+                </div>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Trainer"))
+                {
+                    <div class="sidebar-section">
+                        <span class="sidebar-section__label">AI ALATI</span>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AI" ? "active" : "")" asp-route="AIUnos">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Unos</span>
+                        </a>
+                    </div>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="sidebar-section">
+                        <span class="sidebar-section__label">ADMIN</span>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Log" ? "active" : "")" asp-route="LogoviIndex">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Logovi</span>
+                        </a>
+                    </div>
+                }
+            </nav>
+
+            <partial name="_LoginPartial" />
+        </aside>
+
+        <!-- MOBILE HEADER WITH DROPDOWN MENU -->
+        <header class="mobile-header">
+            <h2 class="mobile-logo">GymTracker</h2>
+            <button class="gs-mobile-btn" id="gs-mobile-btn" title="Pretraži">
+                <i class="fas fa-search"></i>
+            </button>
+            <input type="checkbox" id="mobile-menu-toggle" class="mobile-menu-checkbox" />
+            <label for="mobile-menu-toggle" class="mobile-menu-button">
+                <i class="fas fa-bars"></i>
+            </label>
+            <nav class="mobile-menu-dropdown">
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-route="HomeRoot">
+                    <i class="fas fa-home" style="margin-right: var(--sp-2);"></i> Početna
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Trening" ? "active" : "")" asp-route="TreninziIndex">
+                    <i class="fas fa-dumbbell" style="margin-right: var(--sp-2);"></i> Treninzi
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Vjezba" ? "active" : "")" asp-route="VjezbeIndex">
+                    <i class="fas fa-running" style="margin-right: var(--sp-2);"></i> Vježbe
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Plan" ? "active" : "")" asp-route="PlanoviIndex">
+                    <i class="fas fa-clipboard-list" style="margin-right: var(--sp-2);"></i> Planovi
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Cilj" ? "active" : "")" asp-route="CiljeviIndex">
+                    <i class="fas fa-bullseye" style="margin-right: var(--sp-2);"></i> Ciljevi
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Mjerenje" ? "active" : "")" asp-route="MjerenjaIndex">
+                    <i class="fas fa-balance-scale" style="margin-right: var(--sp-2);"></i> Mjerenja
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Korisnik" ? "active" : "")" asp-route="KorisniciIndex">
+                    <i class="fas fa-users" style="margin-right: var(--sp-2);"></i> Korisnici
+                </a>
+                @if (User.IsInRole("Admin") || User.IsInRole("Trainer"))
+                {
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AI" ? "active" : "")" asp-route="AIUnos">
+                        <i class="fas fa-robot" style="margin-right: var(--sp-2);"></i> AI Unos
+                    </a>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Log" ? "active" : "")" asp-route="LogoviIndex">
+                        <i class="fas fa-file-alt" style="margin-right: var(--sp-2);"></i> Logovi
+                    </a>
+                }
+            </nav>
+        </header>
+
+        <main class="app-main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- GLOBAL SEARCH OVERLAY -->
+    <div class="gs-overlay" id="gs-overlay" role="dialog" aria-modal="true" aria-label="Globalna pretraga" hidden>
+        <div class="gs-modal">
+            <div class="gs-input-wrap">
+                <i class="fas fa-search gs-input-icon"></i>
+                <input
+                    type="text"
+                    class="gs-input"
+                    id="gs-input"
+                    placeholder="Pretraži stranice, vježbe, planove, korisnike..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-label="Polje za pretragu"
+                    aria-autocomplete="list"
+                    aria-controls="gs-results"
+                />
+                <kbd class="gs-esc-hint">Esc</kbd>
+            </div>
+            <div class="gs-results" id="gs-results" role="listbox">
+                <div class="gs-empty-hint">
+                    <i class="fas fa-keyboard"></i>
+                    <span>Počnite tipkati za pretragu&hellip;</span>
+                </div>
+            </div>
+            <div class="gs-footer">
+                <span><kbd>↑↓</kbd> navigacija</span>
+                <span><kbd>↵</kbd> otvori</span>
+                <span><kbd>Esc</kbd> zatvori</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hr.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,68 @@
+@model Sustavzapracenjenapretkauteretani.Web.Models.TreningCreateViewModel
+
+<input type="hidden" asp-for="Id" />
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<section class="form-section">
+    <h2>Osnovni podaci</h2>
+    <div class="form-grid">
+
+        <partial name="_AutocompleteField" model='new AutocompleteFieldViewModel {
+            FieldName = "KorisnikId",
+            Label = "Korisnik",
+            Endpoint = "/korisnici/pretraga",
+            InitialValue = Model.KorisnikNaziv,
+            InitialId = Model.KorisnikId > 0 ? Model.KorisnikId : null
+        }' />
+
+        <partial name="_DatePickerPartial" model='new DatePickerViewModel {
+            FieldName    = "DatumVrijeme",
+            Label        = "Datum i vrijeme",
+            WithTime     = true,
+            InitialValue = Model.DatumVrijeme != default(DateTime) ? Model.DatumVrijeme.ToString("yyyy-MM-ddTHH:mm") : null,
+            Hint         = "Kada je trening održan?"
+        }' />
+
+        <div class="form-field">
+            <label asp-for="TrajanjeMinuta"></label>
+            <input asp-for="TrajanjeMinuta" type="number" min="1" max="480" />
+            <span asp-validation-for="TrajanjeMinuta" class="validation-text"></span>
+            <span class="field-hint">Trajanje u minutama (1-480)</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Vrsta"></label>
+            <select asp-for="Vrsta" asp-items="Html.GetEnumSelectList<VrstaTreninga>()"></select>
+            <span asp-validation-for="Vrsta" class="validation-text"></span>
+        </div>
+
+    </div>
+</section>
+
+<section class="form-section">
+    <h2>Detaljne informacije</h2>
+    <div class="form-grid">
+
+        <div class="form-field form-field-full">
+            <label asp-for="Biljeske"></label>
+            <textarea asp-for="Biljeske" rows="3" style="background: var(--color-base-800); border: 1px solid var(--color-border-default); color: var(--color-text-primary); border-radius: 8px; padding: 10px 12px; font-size: 14px; resize: vertical;" placeholder="Vaše bilješke o treningu..."></textarea>
+            <span asp-validation-for="Biljeske" class="validation-text"></span>
+            <span class="field-hint">Opcionalno — dodatne napomene o treningu</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="PotroseneKalorije"></label>
+            <input asp-for="PotroseneKalorije" type="number" min="0" max="5000" />
+            <span asp-validation-for="PotroseneKalorije" class="validation-text"></span>
+            <span class="field-hint">Procijenjene potrošene kalorije</span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Ocjena"></label>
+            <input asp-for="Ocjena" type="number" min="1" max="10" />
+            <span asp-validation-for="Ocjena" class="validation-text"></span>
+            <span class="field-hint">Ocjena intenziteta treninga (1-10)</span>
+        </div>
+
+    </div>
+</section>

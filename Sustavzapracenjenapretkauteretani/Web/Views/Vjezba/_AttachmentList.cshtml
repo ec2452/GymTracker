@@ -1,0 +1,46 @@
+@model List<Teretana.Models.Attachment>
+
+@if (!Model.Any())
+{
+    <p class="attachment-empty">Još nema priloženih datoteka.</p>
+}
+else
+{
+    <table class="attachment-table">
+        <thead>
+            <tr>
+                <th>Datoteka</th>
+                <th>Veličina</th>
+                <th>Akcija</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>
+                        <a href="@a.FilePath" target="_blank" class="attachment-link">
+                            @if (a.ContentType.StartsWith("image/"))
+                            {
+                                <i class="fas fa-image"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-file-pdf"></i>
+                            }
+                            @a.FileName
+                        </a>
+                    </td>
+                    <td>@((a.FileSize / 1024.0).ToString("F1")) KB</td>
+                    <td>
+                        <button type="button"
+                                class="attachment-delete"
+                                onclick="deleteAttachment(@a.Id)">
+                            <i class="fas fa-trash"></i> Obriši
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

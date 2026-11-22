@@ -1,0 +1,126 @@
+@model List<Korisnik>
+
+@{
+    ViewData["Title"] = "Korisnici";
+}
+
+<!-- HEADER -->
+<div class="korisnici-header">
+    <div>
+        <h1>Korisnici</h1>
+        <p class="korisnici-count">
+            @if (Model.Count == 0)
+            {
+                <span>Nema registriranih korisnika</span>
+            }
+            else
+            {
+                <span>Ukupno @Model.Count @(Model.Count == 1 ? "korisnik" : "korisnika")</span>
+            }
+        </p>
+    </div>
+    <a asp-route="KorisnikCreate" class="btn-action btn-action--primary">
+        <i class="fas fa-user-plus"></i> Dodaj korisnika
+    </a>
+</div>
+
+<!-- SEARCH -->
+<div class="search-bar">
+    <i class="fas fa-search search-bar__icon"></i>
+    <input type="text" id="korisnik-index-search" class="search-bar__input" placeholder="Pretraži korisnike..." />
+    <div id="korisnik-index-results" class="search-bar__results"></div>
+</div>
+
+<!-- KORISNICI GRID -->
+@if (Model.Count > 0)
+{
+    <div class="korisnici-grid">
+        @foreach (var korisnik in Model)
+        {
+            var initials = $"{korisnik.Ime[0]}{korisnik.Prezime[0]}".ToUpper();
+            var bmi      = korisnik.Tezina / Math.Pow(korisnik.Visina / 100.0, 2);
+            var bmiClass = bmi < 18.5 ? "bmi-chip--low" : (bmi < 25 ? "bmi-chip--normal" : (bmi < 30 ? "bmi-chip--high" : "bmi-chip--obese"));
+            var bmiLabel = bmi < 18.5 ? "Premala" : (bmi < 25 ? "Normalna" : (bmi < 30 ? "Povišena" : "Pretilost"));
+
+            <article class="user-card">
+                <!-- TOP: avatar + name + email -->
+                <div class="user-card-top">
+                    <div class="user-avatar">@initials</div>
+                    <div class="user-card-identity">
+                        <div class="user-card-name">@korisnik.Ime @korisnik.Prezime</div>
+                        <div class="user-card-email" title="@korisnik.Email">@korisnik.Email</div>
+                    </div>
+                    <span class="bmi-chip @bmiClass" title="BMI @bmi.ToString("F1")">@bmi.ToString("F1")</span>
+                </div>
+
+                <!-- META: registration / height / weight -->
+                <div class="user-card-meta">
+                    <div class="user-card-meta-item">
+                        <div class="user-card-meta-label">Registracija</div>
+                        <div class="user-card-meta-value">@korisnik.DatumRegistracije.ToString("dd.MM.yy.")</div>
+                    </div>
+                    <div class="user-card-meta-item">
+                        <div class="user-card-meta-label">Visina</div>
+                        <div class="user-card-meta-value">@korisnik.Visina.ToString("F0") cm</div>
+                    </div>
+                    <div class="user-card-meta-item">
+                        <div class="user-card-meta-label">Težina</div>
+                        <div class="user-card-meta-value">@korisnik.Tezina.ToString("F1") kg</div>
+                    </div>
+                </div>
+
+                <!-- PLAN pill -->
+                @if (korisnik.TrenutniPlan != null)
+                {
+                    <div class="user-plan-pill">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="user-plan-pill-name">@korisnik.TrenutniPlan.Naziv</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="user-plan-pill user-plan-pill--empty">
+                        <i class="fas fa-ban"></i>
+                        <span class="user-plan-pill-name">Nema dodijeljenog plana</span>
+                    </div>
+                }
+
+                <!-- ACTIONS -->
+                <div class="user-card-footer">
+                    <a asp-route="KorisnikDetails"
+                       asp-route-id="@korisnik.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{korisnik.Ime} {korisnik.Prezime}")"
+                       class="goal-button" style="flex: 1;">
+                        <i class="fas fa-arrow-right goal-button-icon"></i> Detalji
+                    </a>
+                    <a asp-route="KorisnikEdit"
+                       asp-route-id="@korisnik.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{korisnik.Ime} {korisnik.Prezime}")"
+                       class="btn-action btn-action--edit" style="font-size: 13px; min-height: 36px; padding: 6px 12px;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a asp-route="KorisnikDelete"
+                       asp-route-id="@korisnik.Id"
+                       asp-route-slug="@SlugHelper.Slugify($"{korisnik.Ime} {korisnik.Prezime}")"
+                       class="btn-action btn-action--delete" style="font-size: 13px; min-height: 36px; padding: 6px 12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </article>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h2>Nema korisnika</h2>
+        <p>Nema registriranih korisnika za prikaz.</p>
+    </div>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initIndexSearch('korisnik-index-search', 'korisnik-index-results', '/korisnici/pretraga');
+    });
+</script>

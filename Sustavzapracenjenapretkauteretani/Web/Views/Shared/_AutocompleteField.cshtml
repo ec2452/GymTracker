@@ -1,0 +1,24 @@
+@model Sustavzapracenjenapretkauteretani.Web.Models.AutocompleteFieldViewModel
+
+<div class="form-field autocomplete-field">
+    <label>@Model.Label</label>
+    <input type="text"
+           id="@(Model.FieldName)-search"
+           value="@Model.InitialValue"
+           placeholder="Počni pisati..."
+           autocomplete="off" />
+    <input type="hidden" name="@Model.FieldName" value="@Model.InitialId" class="validate-hidden" />
+    <div id="@(Model.FieldName)-results" class="autocomplete-results"></div>
+    <span class="validation-text field-validation-valid"
+          data-valmsg-for="@Model.FieldName"
+          data-valmsg-replace="true"></span>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initAutocomplete('@(Model.FieldName)-search',
+                         '@(Model.FieldName)-results',
+                         '@Model.FieldName',
+                         '@Model.Endpoint');
+    });
+</script>

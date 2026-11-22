@@ -1,0 +1,57 @@
+@using System.Globalization
+@model Sustavzapracenjenapretkauteretani.Web.Models.DatePickerViewModel
+
+@{
+    // Kultura preuzeta iz Accept-Language headera preglednika (postavljeno u Program.cs)
+    var serverCulture = CultureInfo.CurrentCulture.TwoLetterISOLanguageName; // "hr" ili "en"
+
+    var fieldState  = ViewContext.ViewData.ModelState[Model.FieldName];
+    var hasError    = fieldState?.Errors?.Count > 0;
+    var rawMsg      = hasError ? fieldState!.Errors[0].ErrorMessage : "";
+    // Zamijeni generičku ASP.NET poruku bindanja s prijaznom porukom
+    var serverError = (rawMsg.Contains("invalid") || rawMsg.Contains("not valid"))
+                      ? "Datum je obavezan."
+                      : rawMsg;
+}
+
+<div class="form-field datepicker-field">
+    <label for="@(Model.FieldName)-fp">@Model.Label</label>
+
+    @* Vidljivi input – Flatpickr otvara kalendar na ovom elementu *@
+    <input type="text"
+           id="@(Model.FieldName)-fp"
+           class="datepicker-display @(hasError ? "input-validation-error" : "")"
+           autocomplete="off"
+           readonly="readonly" />
+
+    @* Skriveni ISO input – šalje se serveru (npr. "2026-05-20" ili "2026-05-20T10:30") *@
+    <input type="text"
+           id="@Model.FieldName"
+           name="@Model.FieldName"
+           value="@Model.InitialValue"
+           class="datepicker-iso"
+           tabindex="-1"
+           aria-hidden="true" />
+
+    <span class="validation-text @(hasError ? "field-validation-error" : "field-validation-valid")"
+          data-valmsg-for="@Model.FieldName"
+          data-valmsg-replace="true">@(hasError ? serverError : "")</span>
+
+    @if (!string.IsNullOrEmpty(Model.Hint))
+    {
+        <span class="field-hint">@Model.Hint</span>
+    }
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initDatePicker({
+            fieldName:    '@Model.FieldName',
+            withTime:     @(Model.WithTime ? "true" : "false"),
+            initialValue: '@(Model.InitialValue ?? "")',
+            minDate:      '@(Model.MinDate ?? "")',
+            maxDate:      '@(Model.MaxDate ?? "")',
+            culture:      '@serverCulture'
+        });
+    });
+</script>

@@ -1,0 +1,315 @@
+@model Plan
+
+@{
+    ViewData["Title"] = "Detalji plana";
+
+    var levelLabel = Model.Razina switch {
+        RazinaIskustva.Pocetnik => "Početnik",
+        RazinaIskustva.Srednji  => "Srednji",
+        RazinaIskustva.Napredni => "Napredni",
+        _                       => Model.Razina.ToString()
+    };
+    var levelClass = Model.Razina switch {
+        RazinaIskustva.Pocetnik => "pocetnik",
+        RazinaIskustva.Srednji  => "srednji",
+        RazinaIskustva.Napredni => "napredni",
+        _                       => "pocetnik"
+    };
+}
+
+<style>
+    /* KORISNIK KARTICE — slide in s lijeva */
+    .korisnik-kartica {
+        opacity: 0;
+        transform: translateX(-24px);
+        transition: opacity 0.45s ease, transform 0.45s ease,
+                    border-color 0.25s ease, box-shadow 0.25s ease;
+        will-change: transform;
+    }
+
+    .korisnik-kartica.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .korisnik-kartica.visible:hover {
+        border-color: #14B8A650;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px #14B8A630;
+        transform: translateX(0) translateY(-2px);
+    }
+
+    @@keyframes avatar-bounce {
+        0%   { transform: scale(0.5); opacity: 0; }
+        60%  { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1.0); opacity: 1; }
+    }
+</style>
+
+<!-- HEADER SECTION -->
+<div class="plan-details-header">
+    <div class="plan-details-header__title">
+        <span class="level-badge level-badge--@levelClass hero-badge">@levelLabel</span>
+        <h1>@Model.Naziv</h1>
+        <p class="plan-details-subtitle">
+            <i class="fas fa-clock" style="margin-right: 5px; color: var(--color-primary-600);"></i>@Model.TrajanjeTjedana @(Model.TrajanjeTjedana == 1 ? "tjedan" : "tjedni") trajanja
+        </p>
+    </div>
+    <div class="plan-details-header__actions">
+        <a asp-route="PlanEdit" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify(Model.Naziv)" class="btn-action btn-action--edit">
+            <i class="fas fa-edit"></i> Uredi
+        </a>
+        <a asp-route="PlanDelete" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify(Model.Naziv)" class="btn-action btn-action--delete">
+            <i class="fas fa-trash"></i> Obriši
+        </a>
+    </div>
+</div>
+
+<!-- DETAILS CONTAINER -->
+<div class="plan-details-container">
+
+    <!-- DESCRIPTION SECTION -->
+    @if (!string.IsNullOrWhiteSpace(Model.Opis))
+    {
+        <div class="info-card" style="margin-bottom: 20px;">
+            <h3>Opis</h3>
+            <p class="plan-details-description">@Model.Opis</p>
+        </div>
+    }
+
+    <!-- STAT CARDS GRID -->
+    <div class="plan-details-grid">
+        <div class="info-card info-card--stat">
+            <div class="ic-icon"><i class="fas fa-calendar-week"></i></div>
+            <div class="ic-content">
+                <h3>Trajanje</h3>
+                <div class="info-card-value">@Model.TrajanjeTjedana <span class="info-card-unit">tjedni</span></div>
+            </div>
+        </div>
+
+        <div class="info-card info-card--stat">
+            <div class="ic-icon"><i class="fas fa-signal"></i></div>
+            <div class="ic-content">
+                <h3>Razina iskustva</h3>
+                <div class="info-card-value" style="font-size: 16px;">
+                    <span class="level-badge level-badge--@levelClass razina-badge">@levelLabel</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card info-card--stat">
+            <div class="ic-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="ic-content">
+                <h3>Datum kreiranja</h3>
+                <div class="info-card-value" style="font-size: 15px;">@Model.DatumKreiranja.ToString("dd.MM.yyyy.")</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXERCISES SECTION -->
+    <div class="section-card">
+        <div class="section-card__header">
+            <h3>Vježbe</h3>
+            @if (Model.Vjezbe.Any())
+            {
+                <span class="section-card__count">@Model.Vjezbe.Count</span>
+            }
+        </div>
+
+        @if (Model.Vjezbe.Any())
+        {
+            <div class="exercises-list">
+                @{ int idx = 0; }
+                @foreach (var exercise in Model.Vjezbe)
+                {
+                    idx++;
+                    <div class="exercise-item">
+                        <span class="exercise-item__num">@idx.ToString("D2")</span>
+                        <span class="exercise-item__name">@exercise.Naziv</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="section-card__empty">
+                <i class="fas fa-dumbbell"></i>
+                <span>Nema dodanih vježbi</span>
+            </div>
+        }
+    </div>
+
+    <!-- ACTIVE USERS SECTION -->
+    <div class="section-card aktivni-korisnici-sekcija">
+        <div class="section-card__header">
+            <h3>Aktivni korisnici</h3>
+            @if (Model.Korisnici.Any())
+            {
+                <span class="section-card__count">@Model.Korisnici.Count</span>
+            }
+        </div>
+
+        @if (Model.Korisnici.Any())
+        {
+            <p style="font-size: 13px; color: var(--color-text-tertiary); margin: -4px 0 4px;">
+                Korisnici kojima je ovaj plan trenutno dodijeljen.
+            </p>
+            <div class="users-grid">
+                @foreach (var user in Model.Korisnici)
+                {
+                    <div class="user-mini-card korisnik-kartica">
+                        <div class="user-mini-header">
+                            <i class="fas fa-user-circle korisnik-avatar"></i>
+                            <div class="user-mini-info">
+                                <div class="user-mini-name">@user.Ime @user.Prezime</div>
+                                <div class="user-mini-email">@user.Email</div>
+                            </div>
+                        </div>
+                        <div class="user-mini-meta">
+                            <span class="user-mini-badge korisnik-chip">
+                                <i class="fas fa-ruler-vertical"></i> @user.Visina cm
+                            </span>
+                            <span class="user-mini-badge korisnik-chip">
+                                <i class="fas fa-weight"></i> @user.Tezina kg
+                            </span>
+                        </div>
+                        <a asp-route="KorisnikDetails" asp-route-id="@user.Id" asp-route-slug="@SlugHelper.Slugify($"{user.Ime} {user.Prezime}")" class="user-mini-link">
+                            Profil <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="section-card__empty">
+                <i class="fas fa-users"></i>
+                <span>Nema aktivnih korisnika dodijeljenih ovom planu.</span>
+            </div>
+        }
+    </div>
+
+</div>
+
+<!-- BACK BUTTON -->
+<a class="detail-back-link" asp-route="PlanoviIndex">
+    <i class="fas fa-arrow-left detail-back-link__icon" aria-hidden="true"></i>
+    Natrag na listu planova
+</a>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    initBadgePulse();
+    initHeroBadgePulse();
+    initKorisnikAnimacija();
+});
+
+// ==========================================================
+// 1. KORISNIK KARTICE — slide in s lijeva + avatar bounce + chip
+// ==========================================================
+function initKorisnikAnimacija() {
+    var sekcija = document.querySelector('.aktivni-korisnici-sekcija');
+    if (!sekcija) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                var kartice = entry.target.querySelectorAll('.korisnik-kartica');
+
+                kartice.forEach(function (kartica, index) {
+                    setTimeout(function () {
+                        kartica.classList.add('visible');
+
+                        // Avatar bounce 100ms nakon što kartica uđe
+                        setTimeout(function () {
+                            var avatar = kartica.querySelector('.korisnik-avatar');
+                            if (avatar) {
+                                avatar.style.animation = 'avatar-bounce 0.4s ease forwards';
+                            }
+                        }, 100);
+
+                    }, index * 100);
+
+                    // Chip animacija — ulaze jedan po jedan
+                    setTimeout(function () {
+                        var chipovi = kartica.querySelectorAll('.korisnik-chip');
+                        chipovi.forEach(function (chip, i) {
+                            chip.style.opacity = '0';
+                            chip.style.transform = 'scale(0.8)';
+                            chip.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                            setTimeout(function () {
+                                chip.style.opacity = '1';
+                                chip.style.transform = 'scale(1)';
+                            }, 200 + i * 80);
+                        });
+                    }, index * 100 + 150);
+                });
+
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    observer.observe(sekcija);
+}
+
+// ==========================================================
+// 2. BADGE PULSE GLOW — dinamički keyframe u boji razine
+// ==========================================================
+var RAZINA_BOJE = {
+    'POČETNIK':    'rgba(20, 184, 166, ',
+    'SREDNJI':     'rgba(59, 130, 246, ',
+    'NAPREDNI':    'rgba(168, 85, 247, ',
+    'PROFESIONAL': 'rgba(245, 158, 11, '
+};
+
+function initBadgePulse() {
+    var badge = document.querySelector('.razina-badge');
+    if (!badge) return;
+
+    var tekst = badge.textContent.trim().toUpperCase();
+    var bojaBaza = RAZINA_BOJE[tekst] || 'rgba(20, 184, 166, ';
+
+    var styleTag = document.createElement('style');
+    styleTag.id = 'badge-glow-style';
+    styleTag.textContent = [
+        '@@keyframes badge-glow-custom {',
+        '  0%, 100% { box-shadow: 0 0 4px 1px ' + bojaBaza + '0.3); transform: scale(1); }',
+        '  50%       { box-shadow: 0 0 14px 5px ' + bojaBaza + '0.55); transform: scale(1.05); }',
+        '}'
+    ].join('\n');
+    document.head.appendChild(styleTag);
+
+    badge.style.animation = 'badge-glow-custom 3s ease-in-out infinite';
+    badge.style.cursor = 'default';
+    badge.style.display = 'inline-block';
+
+    badge.addEventListener('mouseenter', function () {
+        badge.style.animationPlayState = 'paused';
+        badge.style.transform = 'scale(1.06)';
+        badge.style.transition = 'transform 0.2s ease';
+        badge.style.boxShadow = '0 0 16px 6px ' + bojaBaza + '0.6)';
+    });
+
+    badge.addEventListener('mouseleave', function () {
+        badge.style.animationPlayState = 'running';
+        badge.style.transform = '';
+        badge.style.boxShadow = '';
+    });
+}
+
+function initHeroBadgePulse() {
+    var heroBadge = document.querySelector('.hero-badge');
+    if (!heroBadge) return;
+
+    heroBadge.style.animation = 'badge-glow-custom 2.5s ease-in-out infinite';
+    heroBadge.style.cursor = 'default';
+
+    heroBadge.addEventListener('mouseenter', function () {
+        heroBadge.style.animationPlayState = 'paused';
+    });
+
+    heroBadge.addEventListener('mouseleave', function () {
+        heroBadge.style.animationPlayState = 'running';
+    });
+}
+</script>

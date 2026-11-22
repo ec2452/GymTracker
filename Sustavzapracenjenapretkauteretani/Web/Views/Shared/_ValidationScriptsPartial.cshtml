@@ -1,0 +1,10 @@
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $.validator.setDefaults({
+        ignore: ':hidden:not(.validate-hidden)',
+        onfocusout: function (element) {
+            this.element(element);
+        }
+    });
+</script>

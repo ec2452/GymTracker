@@ -1,0 +1,235 @@
+@model Korisnik
+
+@{
+    ViewData["Title"] = $"{Model.Ime} {Model.Prezime}";
+
+    var initials         = $"{Model.Ime.FirstOrDefault('?')}{Model.Prezime.FirstOrDefault('?')}".ToUpper();
+    var age              = DateTime.Today.Year - Model.DatumRodjenja.Year;
+    if (Model.DatumRodjenja.Date > DateTime.Today.AddYears(-age)) age--;
+
+    var bmi              = Model.Tezina / Math.Pow(Model.Visina / 100.0, 2);
+    var bmiClass         = bmi < 18.5 ? "bmi-chip--low" : (bmi < 25 ? "bmi-chip--normal" : (bmi < 30 ? "bmi-chip--high" : "bmi-chip--obese"));
+    var bmiLabel         = bmi < 18.5 ? "Nedovoljna težina" : (bmi < 25 ? "Normalna težina" : (bmi < 30 ? "Prekomjerna težina" : "Pretilost"));
+    var bmiIconClass     = bmi < 18.5 ? "gsc-icon--blue"  : (bmi < 25 ? ""                  : (bmi < 30 ? "gsc-icon--warn"       : "gsc-icon--red"));
+
+    var registrationDays = (DateTime.Today - Model.DatumRegistracije.Date).Days;
+    var achievedCount    = Model.Ciljevi.Count(c => c.Postignut);
+}
+
+<!-- HEADER -->
+<div class="korisnik-details-header">
+    <div class="korisnik-details-header__profile">
+        <div class="user-avatar user-avatar--lg">@initials</div>
+        <div class="korisnik-details-header__info">
+            <h1>@Model.Ime @Model.Prezime</h1>
+            <div class="korisnik-details-header__email">
+                <i class="fas fa-envelope"></i>
+                <span>@Model.Email</span>
+            </div>
+            <div class="korisnik-details-header__since">
+                <i class="fas fa-calendar-check"></i>
+                <span>Član od @Model.DatumRegistracije.ToString("dd.MM.yyyy.") &middot; @registrationDays dana</span>
+            </div>
+        </div>
+    </div>
+    <div class="korisnik-details-header__actions">
+        <a asp-route="KorisnikEdit"
+           asp-route-id="@Model.Id"
+           asp-route-slug="@SlugHelper.Slugify($"{Model.Ime} {Model.Prezime}")"
+           class="btn-action btn-action--edit">
+            <i class="fas fa-edit"></i> Uredi
+        </a>
+        <a asp-route="KorisnikDelete"
+           asp-route-id="@Model.Id"
+           asp-route-slug="@SlugHelper.Slugify($"{Model.Ime} {Model.Prezime}")"
+           class="btn-action btn-action--delete">
+            <i class="fas fa-trash"></i> Obriši
+        </a>
+    </div>
+</div>
+
+<!-- FIZIČKI STAT KARTICE -->
+<div class="goal-stats-grid" style="margin-bottom: 20px;">
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon"><i class="fas fa-ruler-vertical"></i></div>
+        <div>
+            <div class="gsc-label">Visina</div>
+            <div class="gsc-value">@Model.Visina.ToString("F0") <span style="font-size:13px; font-weight:500; color:var(--color-text-tertiary);">cm</span></div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon gsc-icon--blue"><i class="fas fa-weight"></i></div>
+        <div>
+            <div class="gsc-label">Težina</div>
+            <div class="gsc-value">@Model.Tezina.ToString("F1") <span style="font-size:13px; font-weight:500; color:var(--color-text-tertiary);">kg</span></div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon @bmiIconClass"><i class="fas fa-heartbeat"></i></div>
+        <div>
+            <div class="gsc-label">BMI</div>
+            <div class="gsc-value" style="font-size:18px;">
+                @bmi.ToString("F1")
+                <span class="bmi-chip @bmiClass" style="font-size:10px; vertical-align: middle; margin-left:4px;">@bmiLabel</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon"><i class="fas fa-birthday-cake"></i></div>
+        <div>
+            <div class="gsc-label">Starost</div>
+            <div class="gsc-value">@age <span style="font-size:13px; font-weight:500; color:var(--color-text-tertiary);">god.</span></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- AKTIVNOST STAT KARTICE -->
+<div class="goal-stats-grid" style="margin-bottom: 24px;">
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon"><i class="fas fa-dumbbell"></i></div>
+        <div>
+            <div class="gsc-label">Treninzi</div>
+            <div class="gsc-value">@Model.Treninzi.Count</div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon gsc-icon--warn"><i class="fas fa-bullseye"></i></div>
+        <div>
+            <div class="gsc-label">Ciljevi</div>
+            <div class="gsc-value">@achievedCount <span style="font-size:12px; color:var(--color-text-tertiary);">/ @Model.Ciljevi.Count</span></div>
+        </div>
+    </div>
+
+    <div class="goal-stat-card">
+        <div class="gsc-icon gsc-icon--blue"><i class="fas fa-chart-line"></i></div>
+        <div>
+            <div class="gsc-label">Mjerenja</div>
+            <div class="gsc-value">@Model.Mjerenja.Count</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- OSOBNI PODACI -->
+<div class="section-card">
+    <div class="section-card__header">
+        <h3>Osobni podaci</h3>
+    </div>
+    <div>
+        <div class="info-item">
+            <span class="info-label">Datum rođenja</span>
+            <span class="info-value">@Model.DatumRodjenja.ToString("dd.MM.yyyy.") &nbsp;<span style="color:var(--color-text-tertiary); font-weight:500;">(@age godina)</span></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Email</span>
+            <span class="info-value" style="word-break:break-all;">@Model.Email</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Datum registracije</span>
+            <span class="info-value">@Model.DatumRegistracije.ToString("dd.MM.yyyy.")</span>
+        </div>
+        <div class="info-item" style="border-bottom:none;">
+            <span class="info-label">Trenutni plan</span>
+            <span class="info-value">
+                @if (Model.TrenutniPlan != null)
+                {
+                    <a asp-route="PlanDetails"
+                       asp-route-id="@Model.TrenutniPlan.Id"
+                       asp-route-slug="@SlugHelper.Slugify(Model.TrenutniPlan.Naziv)"
+                       style="color: var(--color-primary-500); text-decoration: none; font-weight: 600;">
+                        <i class="fas fa-clipboard-list" style="font-size:12px; margin-right:5px;"></i>@Model.TrenutniPlan.Naziv
+                    </a>
+                }
+                else
+                {
+                    <span style="color:var(--color-text-disabled); font-weight:400;">Nije odabran</span>
+                }
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- CILJEVI KORISNIKA -->
+<div class="section-card">
+    <div class="section-card__header">
+        <h3>Ciljevi</h3>
+        @if (Model.Ciljevi.Any())
+        {
+            <span class="section-card__count">@achievedCount / @Model.Ciljevi.Count postignutih</span>
+        }
+    </div>
+
+    @if (Model.Ciljevi.Any())
+    {
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            @foreach (var goal in Model.Ciljevi)
+            {
+                var tipLabel = goal.Tip switch {
+                    TipCilja.Mrsavljenje    => "Mršavljenje",
+                    TipCilja.DobivanjeMase  => "Dobivanje mase",
+                    TipCilja.PovecanjeSnage => "Povećanje snage",
+                    TipCilja.Izdrzljivost   => "Izdržljivost",
+                    TipCilja.Fleksibilnost  => "Fleksibilnost",
+                    _                       => goal.Tip.ToString()
+                };
+                var tipClass = goal.Tip switch {
+                    TipCilja.Mrsavljenje    => "mrsavljenje",
+                    TipCilja.DobivanjeMase  => "dobivanjemase",
+                    TipCilja.PovecanjeSnage => "povecanjesnage",
+                    TipCilja.Izdrzljivost   => "izdrzljivost",
+                    TipCilja.Fleksibilnost  => "fleksibilnost",
+                    _                       => "mrsavljenje"
+                };
+                var tipIcon = goal.Tip switch {
+                    TipCilja.Mrsavljenje    => "fa-fire-alt",
+                    TipCilja.DobivanjeMase  => "fa-dumbbell",
+                    TipCilja.PovecanjeSnage => "fa-fist-raised",
+                    TipCilja.Izdrzljivost   => "fa-heartbeat",
+                    TipCilja.Fleksibilnost  => "fa-spa",
+                    _                       => "fa-bullseye"
+                };
+
+                <div class="goal-mini-card">
+                    <div class="goal-mini-left">
+                        <span class="tip-badge tip-badge--@tipClass">
+                            <i class="fas @tipIcon"></i> @tipLabel
+                        </span>
+                        <span class="goal-mini-value">
+                            Ciljana vrijednost: @goal.CiljanaVrijednost &nbsp;&middot;&nbsp; Rok: @goal.Rok.ToString("dd.MM.yyyy.")
+                        </span>
+                    </div>
+                    <span class="goal-status-badge @(goal.Postignut ? "completed" : "pending")">
+                        @if (goal.Postignut)
+                        {
+                            <i class="fas fa-check-circle"></i><span>Postignut</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-hourglass-half"></i><span>U tijeku</span>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="section-card__empty">
+            <i class="fas fa-bullseye"></i>
+            <span>Nema postavljenih ciljeva</span>
+        </div>
+    }
+</div>
+
+<!-- BACK BUTTON -->
+<a class="detail-back-link" asp-route="KorisniciIndex">
+    <i class="fas fa-arrow-left detail-back-link__icon" aria-hidden="true"></i>
+    Natrag na listu korisnika
+</a>

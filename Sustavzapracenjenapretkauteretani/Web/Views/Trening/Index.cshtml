@@ -1,0 +1,337 @@
+@model TreningIndexViewModel
+
+@{
+    ViewData["Title"] = "Treninzi";
+
+    var vrstaNaziv = new Dictionary<int, string>
+    {
+        { 1, "Snaga" },
+        { 2, "Kardio" },
+        { 3, "HIIT" },
+        { 4, "Funkcionalni" },
+        { 5, "Mobility" }
+    };
+
+    var hasActiveFilters = Model.SelectedUserId.HasValue || Model.SelectedVrsta.HasValue || Model.SelectedPeriod is 7 or 30 or 90 || Model.SelectedSort != "date_desc";
+}
+
+<div class="training-page">
+    <header class="training-header">
+        <div>
+            <h1>Treninzi</h1>
+            <p class="training-count">
+                @if (Model.Treninzi.Count == 0)
+                {
+                    <span>Nema treninga za odabrane kriterije.</span>
+                }
+                else
+                {
+                    <span>Prikazano @Model.Treninzi.Count od ukupno @Model.TotalCount treninga.</span>
+                }
+            </p>
+        </div>
+        <div class="training-header-actions">
+            <a asp-route="TreningCreate" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 8px; background: var(--color-primary-600); color: #042018; font-weight: 700; text-decoration: none;">
+                <i class="fas fa-plus"></i> Novi trening
+            </a>
+            @if (hasActiveFilters)
+            {
+                <a asp-action="Index" class="training-reset-link">Resetiraj filtere</a>
+            }
+        </div>
+    </header>
+
+    <section class="training-summary-grid" aria-label="Sažetak treninga">
+        <article class="training-summary-card">
+            <span class="training-summary-label">Ukupno treninga</span>
+            <strong class="training-summary-value">@Model.Treninzi.Count</strong>
+            <span class="training-summary-meta">u trenutnom prikazu</span>
+        </article>
+        <article class="training-summary-card">
+            <span class="training-summary-label">Ukupno minuta</span>
+            <strong class="training-summary-value">@Model.TotalMinutes</strong>
+            <span class="training-summary-meta">@Math.Round(Model.TotalMinutes / 60.0, 1) sati rada</span>
+        </article>
+        <article class="training-summary-card">
+            <span class="training-summary-label">Prosjek trajanja</span>
+            <strong class="training-summary-value">@Model.AverageDuration min</strong>
+            <span class="training-summary-meta">po treningu</span>
+        </article>
+        <article class="training-summary-card">
+            <span class="training-summary-label">Prosječna ocjena</span>
+            <strong class="training-summary-value">@(Model.AverageRating?.ToString("0.0") ?? "-")</strong>
+            <span class="training-summary-meta">od 10</span>
+        </article>
+    </section>
+
+    <section class="training-filters" aria-label="Filteri treninga">
+        <form id="training-filter-form" method="get" class="training-filter-form" onsubmit="return false;">
+            <div class="training-filter-field">
+                <label for="userId">Korisnik</label>
+                <select id="userId" name="userId">
+                    <option value="">Svi korisnici</option>
+                    @foreach (var user in Model.AvailableUsers)
+                    {
+                        <option value="@user.Id" selected="@(Model.SelectedUserId == user.Id)">@user.FullName (@user.TrainingCount)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="training-filter-field">
+                <label for="vrsta">Vrsta treninga</label>
+                <select id="vrsta" name="vrsta">
+                    <option value="">Sve vrste</option>
+                    @foreach (var vrsta in Enum.GetValues<VrstaTreninga>())
+                    {
+                        <option value="@((int)vrsta)" selected="@(Model.SelectedVrsta == vrsta)">@vrstaNaziv[(int)vrsta]</option>
+                    }
+                </select>
+            </div>
+
+            <div class="training-filter-field">
+                <label for="period">Razdoblje</label>
+                <select id="period" name="period">
+                    <option value="0" selected="@(Model.SelectedPeriod == 0)">Sve</option>
+                    <option value="7" selected="@(Model.SelectedPeriod == 7)">Zadnjih 7 dana</option>
+                    <option value="30" selected="@(Model.SelectedPeriod == 30)">Zadnjih 30 dana</option>
+                    <option value="90" selected="@(Model.SelectedPeriod == 90)">Zadnjih 90 dana</option>
+                </select>
+            </div>
+
+            <div class="training-filter-field">
+                <label for="sort">Sortiranje</label>
+                <select id="sort" name="sort">
+                    <option value="date_desc" selected="@(Model.SelectedSort == "date_desc")">Najnoviji prvo</option>
+                    <option value="date_asc" selected="@(Model.SelectedSort == "date_asc")">Najstariji prvo</option>
+                    <option value="duration_desc" selected="@(Model.SelectedSort == "duration_desc")">Najduže trajanje</option>
+                    <option value="duration_asc" selected="@(Model.SelectedSort == "duration_asc")">Najkraće trajanje</option>
+                    <option value="rating_desc" selected="@(Model.SelectedSort == "rating_desc")">Najviša ocjena</option>
+                    <option value="rating_asc" selected="@(Model.SelectedSort == "rating_asc")">Najniža ocjena</option>
+                </select>
+            </div>
+
+            <button type="button" class="training-apply-button" onclick="applyTrainingFilters()">Primijeni</button>
+        </form>
+    </section>
+
+    @if (Model.Treninzi.Count > 0)
+    {
+        <div class="training-grid">
+            @foreach (var training in Model.Treninzi)
+            {
+                var vrstaTekst = vrstaNaziv[(int)training.Vrsta];
+                var vrstaClass = training.Vrsta switch
+                {
+                    VrstaTreninga.Snaga => "training-type-badge--snaga",
+                    VrstaTreninga.Kardio => "training-type-badge--kardio",
+                    VrstaTreninga.HIIT => "training-type-badge--hiit",
+                    VrstaTreninga.Funkcionalni => "training-type-badge--funkcionalni",
+                    _ => "training-type-badge--mobility"
+                };
+                var vrstaBoja = training.Vrsta switch
+                {
+                    VrstaTreninga.Snaga => "#EF4444",
+                    VrstaTreninga.Kardio => "#3B82F6",
+                    VrstaTreninga.HIIT => "#F97316",
+                    VrstaTreninga.Funkcionalni => "#14B8A6",
+                    _ => "#A855F7"
+                };
+                var userName = training.Korisnik is null ? "Nepoznat korisnik" : $"{training.Korisnik.Ime} {training.Korisnik.Prezime}";
+
+                <article class="training-card trening-kartica">
+                    <div class="training-card-header">
+                        <span class="training-type-badge @vrstaClass trening-badge" data-boja="@vrstaBoja">@vrstaTekst</span>
+                        <div class="training-card-datetime">
+                            <span>@training.DatumVrijeme.ToString("dd.MM.yyyy.")</span>
+                            <span>@training.DatumVrijeme.ToString("HH:mm")</span>
+                        </div>
+                    </div>
+
+                    <p class="training-user">@userName</p>
+
+                    <div class="training-meta">
+                        <div class="training-meta-item">
+                            <span class="training-meta-label">Trajanje</span>
+                            <strong class="training-meta-value"><span class="animirani-broj" data-cilj="@training.TrajanjeMinuta">0</span> min</strong>
+                        </div>
+                        <div class="training-meta-item">
+                            <span class="training-meta-label">Kalorije</span>
+                            <strong class="training-meta-value">
+                                @if (training.PotroseneKalorije.HasValue)
+                                {
+                                    <span class="animirani-broj" data-cilj="@training.PotroseneKalorije.Value">0</span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </strong>
+                        </div>
+                        <div class="training-meta-item">
+                            <span class="training-meta-label">Ocjena</span>
+                            <strong class="training-meta-value">
+                                @if (training.Ocjena.HasValue)
+                                {
+                                    <span class="animirani-broj" data-cilj="@training.Ocjena.Value">0</span><span>/10</span>
+                                }
+                                else
+                                {
+                                    <span>—/10</span>
+                                }
+                            </strong>
+                        </div>
+                        <div class="training-meta-item">
+                            <span class="training-meta-label">Status bilješki</span>
+                            <strong class="training-meta-value">@(string.IsNullOrWhiteSpace(training.Biljeske) ? "Nema" : "Unesene")</strong>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(training.Biljeske))
+                    {
+                        <div class="training-note">
+                            @((training.Biljeske.Length > 120) ? training.Biljeske.Substring(0, 120) + "..." : training.Biljeske)
+                        </div>
+                    }
+
+                    <div class="gumb-row">
+                        <a asp-route="TreningDetails"
+                           asp-route-id="@training.Id"
+                           asp-route-slug="@SlugHelper.Slugify($"{userName} {training.DatumVrijeme:yyyy-MM-dd}")"
+                           class="trening-gumb gumb-detalji"
+                           aria-label="Prikaži detalje treninga @training.Id">
+                            Detalji <span aria-hidden="true">→</span>
+                        </a>
+                        <a asp-route="TreningEdit"
+                           asp-route-id="@training.Id"
+                           asp-route-slug="@SlugHelper.Slugify($"{userName} {training.DatumVrijeme:yyyy-MM-dd}")"
+                           class="trening-gumb gumb-uredi">
+                            <i class="fas fa-edit"></i> Uredi
+                        </a>
+                        <a asp-route="TreningDelete"
+                           asp-route-id="@training.Id"
+                           asp-route-slug="@SlugHelper.Slugify($"{userName} {training.DatumVrijeme:yyyy-MM-dd}")"
+                           class="trening-gumb gumb-obrisi"
+                           onclick="event.preventDefault(); var href=this.href; handleObrisiSAnimacijom(this.closest('.trening-kartica'), function(){ window.location.href=href; });">
+                            <i class="fas fa-trash"></i> Obriši
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">🏋️</div>
+            <h2>Nema treninga</h2>
+            <p>
+                @if (hasActiveFilters)
+                {
+                    <span>Nijedan trening ne odgovara odabranim filterima. Promijeni kriterije ili resetiraj filtere.</span>
+                }
+                else
+                {
+                    <span>Treninzi još nisu uneseni u sustav.</span>
+                }
+            </p>
+            @if (hasActiveFilters)
+            {
+                <a asp-action="Index" class="training-reset-link">Prikaži sve treninge</a>
+            }
+        </div>
+    }
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ==========================================================
+    // A) STAGGERED CARD ENTRANCE + ANIMATED COUNTERS
+    // ==========================================================
+    function initKarticaAnimacije() {
+        var kartice = document.querySelectorAll('.trening-kartica');
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    var sve = Array.from(kartice);
+                    var index = sve.indexOf(entry.target);
+                    var kolona = index % 2;
+                    var red = Math.floor(index / 2);
+
+                    setTimeout(function () {
+                        entry.target.classList.add('visible');
+                        entry.target.querySelectorAll('.animirani-broj').forEach(function (el) {
+                            animirajBroj(el);
+                        });
+                    }, (red * 90) + (kolona * 35));
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        kartice.forEach(function (k) { observer.observe(k); });
+    }
+
+    // ==========================================================
+    // B) ANIMIRANI COUNTER (requestAnimationFrame, ease-out cubic)
+    // ==========================================================
+    function animirajBroj(el) {
+        var cilj = parseFloat(el.dataset.cilj);
+        var trajanje = 800;
+        var start = performance.now();
+
+        function frame(now) {
+            var t = Math.min((now - start) / trajanje, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = Number.isInteger(cilj)
+                ? Math.round(eased * cilj)
+                : (eased * cilj).toFixed(1);
+            if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    // ==========================================================
+    // C) BADGE HOVER GLOW — dinamički u boji badgea
+    // ==========================================================
+    document.querySelectorAll('.trening-kartica').forEach(function (kartica) {
+        var badge = kartica.querySelector('.trening-badge');
+        if (!badge) return;
+
+        var boja = badge.dataset.boja || '#3B82F6';
+
+        kartica.addEventListener('mouseenter', function () {
+            badge.style.boxShadow = '0 0 14px 3px ' + boja + '50';
+            badge.style.transform = 'scale(1.06)';
+        });
+
+        kartica.addEventListener('mouseleave', function () {
+            badge.style.boxShadow = 'none';
+            badge.style.transform = 'scale(1)';
+        });
+    });
+
+    initKarticaAnimacije();
+});
+
+// ==========================================================
+// D) OBRIŠI GUMB — shake + fade out animacija
+// ==========================================================
+function handleObrisiSAnimacijom(kartica, callback) {
+    if (!kartica) { callback(); return; }
+
+    kartica.style.animation = 'shake 0.4s ease';
+
+    setTimeout(function () {
+        kartica.style.animation = 'fadeOutCollapse 0.35s ease forwards';
+        kartica.style.overflow = 'hidden';
+        kartica.style.pointerEvents = 'none';
+
+        setTimeout(function () {
+            callback();
+        }, 300);
+    }, 400);
+}
+</script>

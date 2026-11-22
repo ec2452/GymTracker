@@ -1,0 +1,33 @@
+@model TreningVjezba
+
+@{
+    ViewData["Title"] = "Detalji trening vjezbe";
+}
+
+<h1 class="mb-3">Detalji trening vježbe</h1>
+
+<table class="table table-bordered align-middle">
+    <tbody>
+        <tr><th>Trening</th><td>@(Model.Trening is null ? Model.TreningId.ToString() : $"#{Model.Trening.Id} - {Model.Trening.DatumVrijeme:dd.MM.yyyy. HH:mm}")</td></tr>
+        <tr><th>Vježba</th><td>@(Model.Vjezba?.Naziv ?? Model.VjezbaId.ToString())</td></tr>
+        <tr><th>Redni broj</th><td>@Model.Redoslijed</td></tr>
+        <tr><th>Broj serija</th><td>@Model.BrojSerija</td></tr>
+        <tr><th>Ponavljanja</th><td>@Model.BrojPonavljanja</td></tr>
+        <tr><th>Težina</th><td>@(Model.TezinaKg?.ToString("0.#") ?? "-")</td></tr>
+        <tr><th>Odmor</th><td>@Model.OdmorSekundi sec</td></tr>
+    </tbody>
+</table>
+
+<!-- ACTIONS -->
+<div style="display: flex; gap: 12px; margin-top: 24px;">
+    <a asp-route="TreningVjezbaEdit" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify($"{Model.Vjezba?.Naziv ?? "trening-vjezba"} {Model.TreningId} {Model.Redoslijed}")" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 8px; background: #3b82f6; color: white; font-weight: 700; text-decoration: none;">
+        <i class="fas fa-edit"></i> Uredi
+    </a>
+    <a asp-route="TreningVjezbaDelete" asp-route-id="@Model.Id" asp-route-slug="@SlugHelper.Slugify($"{Model.Vjezba?.Naziv ?? "trening-vjezba"} {Model.TreningId} {Model.Redoslijed}")" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 8px; background: #ef4444; color: white; font-weight: 700; text-decoration: none;">
+        <i class="fas fa-trash"></i> Obriši
+    </a>
+    <a class="detail-back-link" asp-route="TreningVjezbeIndex" style="margin-left: auto;">
+        <i class="fas fa-arrow-left detail-back-link__icon" aria-hidden="true"></i>
+        Natrag na listu trening vježbi
+    </a>
+</div>
